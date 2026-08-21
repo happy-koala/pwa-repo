@@ -2,7 +2,7 @@
 html, body {
   margin: 0; padding: 0; height: 100%;
   background: #0b6b3a;
-  background: #0b5f2a;
+  background: #0b6f3a;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overscroll-behavior: none;
   touch-action: manipulation;
@@ -137,7 +137,7 @@ button.ctrl:active { background: #146b3c; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: calc(var(--cw) * 0.39);
+  font-size: calc(var(--cw) * 0.29);
 }
 .corner.bottom { align-self: flex-end; transform: rotate(180deg); }
 .center-suit {
