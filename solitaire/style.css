@@ -143,7 +143,7 @@ button.ctrl:active { background: #146b3c; }
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  font-size: calc(var(--cw) * 0.42);
+  font-size: calc(var(--cw) * 0.52);
 }
 
 .win-overlay {
