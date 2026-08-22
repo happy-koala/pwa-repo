@@ -1,14 +1,14 @@
 const apps = [
   {
     name: "Solitär",
-    folder: "solitaire"
-    // icon: "icons/icon-192.png"  // optional – wenn nicht vorhanden, wird nur der Name angezeigt
+    folder: "solitaire",
+    icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
   //   name: "Nächstes Spiel",
   //   folder: "naechstes-spiel",
-  //   icon: "icons/icon-192.png"
+  //   icon: "icon-192.png"
   // }
 ];
 
@@ -23,7 +23,7 @@ function renderApps() {
     if (app.icon) {
       const img = document.createElement("img");
       img.className = "app-icon";
-      img.style.visibility = "hidden"; // erst unsichtbar, bis geladen
+      img.style.visibility = "hidden";
       img.src = `${app.folder}/${app.icon}`;
       img.alt = `${app.name} Icon`;
 
