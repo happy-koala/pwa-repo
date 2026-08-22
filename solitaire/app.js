@@ -295,7 +295,7 @@
     return card.suitIndex;
   }
 
-  // ---------- Drag & Drop (Pointer Events, touch+mouse) ----------
+  // ---------- Drag & Drop (Pointer Events + Touch Support) ----------
   let dragData = null;
 
   function attachDrag(el, source, index, col) {
@@ -345,6 +345,10 @@
 
     const rect = el.getBoundingClientRect();
 
+    // Für Touch und Mouse - works auf allen Geräten
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
     const ghostWrap = document.createElement('div');
     ghostWrap.style.position = 'fixed';
     ghostWrap.style.left = rect.left + 'px';
@@ -363,13 +367,12 @@
 
     dragData = {
       cards, source, index, col,
-      startX: e.clientX, startY: e.clientY,
+      startX: clientX, startY: clientY,
       originLeft: rect.left, originTop: rect.top,
       ghostWrap,
       moved: false
     };
 
-    // hide originals while dragging
     hideOriginals(source, col, index);
 
     document.addEventListener('pointermove', onDragMove);
@@ -393,8 +396,10 @@
 
   function onDragMove(e) {
     if (!dragData) return;
-    const dx = e.clientX - dragData.startX;
-    const dy = e.clientY - dragData.startY;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dx = clientX - dragData.startX;
+    const dy = clientY - dragData.startY;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) dragData.moved = true;
     dragData.ghostWrap.style.left = (dragData.originLeft + dx) + 'px';
     dragData.ghostWrap.style.top = (dragData.originTop + dy) + 'px';
@@ -405,11 +410,11 @@
     document.removeEventListener('pointerup', onDragEnd);
     if (!dragData) return;
 
-    const dropX = e.clientX;
-    const dropY = e.clientY;
+    const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
     dragData.ghostWrap.style.pointerEvents = 'none';
     dragData.ghostWrap.style.display = 'none';
-    const target = document.elementFromPoint(dropX, dropY);
+    const target = document.elementFromPoint(clientX, clientY);
     dragData.ghostWrap.remove();
 
     let handled = false;
@@ -505,7 +510,6 @@
   // ---------- Service Worker ----------
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // relativer Pfad -> funktioniert unabhängig vom Unterordner im Repo
       navigator.serviceWorker.register('service-worker.js').catch(() => {});
     });
   }
