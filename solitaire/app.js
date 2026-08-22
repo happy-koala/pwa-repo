@@ -333,6 +333,11 @@
 
   function startDrag(e, el, source, index, col) {
     e.preventDefault();
+
+    if (el.setPointerCapture) {
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+
     let cards;
     if (source === 'tableau') {
       cards = state.tableau[col].slice(index);
@@ -370,6 +375,8 @@
       startX: clientX, startY: clientY,
       originLeft: rect.left, originTop: rect.top,
       ghostWrap,
+      pointerId: e.pointerId,
+      sourceEl: el,
       moved: false
     };
 
@@ -377,6 +384,7 @@
 
     document.addEventListener('pointermove', onDragMove);
     document.addEventListener('pointerup', onDragEnd);
+    document.addEventListener('pointercancel', onDragEnd);
   }
 
   function hideOriginals(source, col, index) {
@@ -408,7 +416,12 @@
   function onDragEnd(e) {
     document.removeEventListener('pointermove', onDragMove);
     document.removeEventListener('pointerup', onDragEnd);
+    document.removeEventListener('pointercancel', onDragEnd);
     if (!dragData) return;
+
+    if (dragData.sourceEl && dragData.sourceEl.releasePointerCapture) {
+      try { dragData.sourceEl.releasePointerCapture(dragData.pointerId); } catch (err) {}
+    }
 
     const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
     const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;

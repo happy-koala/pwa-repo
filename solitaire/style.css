@@ -2,10 +2,10 @@
 html, body {
   margin: 0; padding: 0; height: 100%;
   background: #0b6b3a;
-  background: #0b8f2a;
+  background: #0b4f2a;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overscroll-behavior: none;
-  touch-action: manipulation;
+  touch-action: none;
 }
 #app {
   display: flex;
@@ -47,6 +47,7 @@ button.ctrl {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  touch-action: manipulation;
 }
 button.ctrl:active { background: #146b3c; }
 
@@ -59,17 +60,20 @@ button.ctrl:active { background: #146b3c; }
   flex-direction: column;
   gap: 8px;
   min-height: 0;
+  touch-action: none;
 }
 .row {
   display: flex;
   gap: var(--gap, 6px);
   justify-content: space-between;
+  touch-action: none;
 }
 .top-row { flex: 0 0 auto; }
 .tableau-row {
   flex: 1;
   position: relative;
   min-height: 0;
+  touch-action: none;
 }
 
 .pile {
@@ -79,6 +83,7 @@ button.ctrl:active { background: #146b3c; }
   border-radius: 8px;
   border: 2px solid rgba(255,255,255,0.25);
   flex-shrink: 0;
+  touch-action: none;
 }
 .stock { background: rgba(0,0,0,0.15); cursor: pointer; }
 .waste { background: rgba(0,0,0,0.08); }
@@ -98,6 +103,7 @@ button.ctrl:active { background: #146b3c; }
   width: var(--cw);
   height: 100%;
   flex-shrink: 0;
+  touch-action: none;
 }
 
 .card {
@@ -116,6 +122,7 @@ button.ctrl:active { background: #146b3c; }
   transition: box-shadow 0.15s;
   top: 0;
   left: 0;
+  touch-action: none;
 }
 .card.red { color: #cc2222; }
 .card.black { color: #1a1a1a; }
@@ -170,4 +177,5 @@ button.ctrl:active { background: #146b3c; }
   padding: 12px 20px;
   font-size: 16px;
   font-weight: 700;
+  touch-action: manipulation;
 }
