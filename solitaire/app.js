@@ -13,6 +13,7 @@
   let timerEl = document.getElementById('timer');
   let winOverlay = document.getElementById('winOverlay');
   let winStats = document.getElementById('winStats');
+  let solveBtn = document.getElementById('solveBtn');
 
   let state = {
     stock: [],
@@ -26,6 +27,7 @@
   };
 
   let timerInterval = null;
+  let autoSolving = false;
 
   // ---------- Karten Setup ----------
   function makeDeck() {
@@ -56,6 +58,7 @@
   }
 
   function newGame() {
+    autoSolving = false;
     let deck = shuffle(makeDeck());
     state = {
       stock: [],
@@ -111,6 +114,7 @@
     if (state.history.length > 60) state.history.shift();
   }
   function undo() {
+    if (autoSolving) return;
     if (state.history.length === 0) return;
     const prev = JSON.parse(state.history.pop());
     state.stock = prev.stock;
@@ -254,11 +258,101 @@
       tableauRow.appendChild(colEl);
     }
 
+    updateSolveButton();
     checkWin();
+  }
+
+  // ---------- Auto-Solve Verfügbarkeit ----------
+  function allRemainingCardsFaceUp() {
+    if (state.stock.length > 0) return false;
+    if (state.waste.some(c => !c.faceUp)) return false; // sollte eh nie vorkommen
+    for (const col of state.tableau) {
+      if (col.some(c => !c.faceUp)) return false;
+    }
+    // Es muss noch etwas zu lösen geben
+    const remaining = state.waste.length + state.tableau.reduce((s, c) => s + c.length, 0);
+    return remaining > 0;
+  }
+
+  function updateSolveButton() {
+    if (autoSolving) {
+      solveBtn.classList.add('hidden');
+      return;
+    }
+    if (allRemainingCardsFaceUp()) {
+      solveBtn.classList.remove('hidden');
+    } else {
+      solveBtn.classList.add('hidden');
+    }
+  }
+
+  // ---------- Auto-Solve Ablauf ----------
+  function findNextAutoSolveMove() {
+    // 1. Waste-Karte prüfen
+    if (state.waste.length > 0) {
+      const card = state.waste[state.waste.length - 1];
+      const fIdx = autoFoundationIndexForCard(card);
+      if (canPlaceOnFoundation(card, fIdx)) {
+        return { source: 'waste', col: null, fIdx };
+      }
+    }
+    // 2. Oberste Karte jeder Tableau-Spalte prüfen
+    for (let col = 0; col < 7; col++) {
+      const pile = state.tableau[col];
+      if (pile.length === 0) continue;
+      const card = pile[pile.length - 1];
+      const fIdx = autoFoundationIndexForCard(card);
+      if (canPlaceOnFoundation(card, fIdx)) {
+        return { source: 'tableau', col, fIdx };
+      }
+    }
+    return null;
+  }
+
+  function autoSolveStep() {
+    const move = findNextAutoSolveMove();
+    if (!move) {
+      autoSolving = false;
+      render();
+      return;
+    }
+
+    let card;
+    if (move.source === 'waste') {
+      card = state.waste.pop();
+    } else {
+      card = state.tableau[move.col].pop();
+    }
+    state.foundations[move.fIdx].push(card);
+    incMoves();
+    render();
+
+    if (allFoundationsComplete()) {
+      autoSolving = false;
+      checkWin();
+      return;
+    }
+
+    setTimeout(autoSolveStep, 180);
+  }
+
+  function allFoundationsComplete() {
+    return state.foundations.every(f => f.length === 13);
+  }
+
+  function startAutoSolve() {
+    if (autoSolving) return;
+    if (!allRemainingCardsFaceUp()) return;
+    startTimerIfNeeded();
+    pushHistory();
+    autoSolving = true;
+    solveBtn.classList.add('hidden');
+    autoSolveStep();
   }
 
   // ---------- Stock Klick ----------
   function onStockClick() {
+    if (autoSolving) return;
     startTimerIfNeeded();
     pushHistory();
     if (state.stock.length === 0) {
@@ -299,11 +393,13 @@
   let dragData = null;
 
   function attachDrag(el, source, index, col) {
+    if (autoSolving) return;
     el.addEventListener('pointerdown', (e) => startDrag(e, el, source, index, col));
     el.addEventListener('dblclick', () => tryAutoMove(source, index, col));
   }
 
   function tryAutoMove(source, index, col) {
+    if (autoSolving) return;
     let card;
     if (source === 'waste') card = state.waste[state.waste.length - 1];
     else if (source === 'tableau') card = state.tableau[col][state.tableau[col].length - 1];
@@ -332,10 +428,10 @@
   }
 
   function startDrag(e, el, source, index, col) {
+    if (autoSolving) return;
     e.preventDefault();
-
     if (el.setPointerCapture) {
-      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      try { el.setPointerCapture(e.pointerId); } catch(err) {}
     }
 
     let cards;
@@ -350,7 +446,6 @@
 
     const rect = el.getBoundingClientRect();
 
-    // Für Touch und Mouse - works auf allen Geräten
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -375,9 +470,9 @@
       startX: clientX, startY: clientY,
       originLeft: rect.left, originTop: rect.top,
       ghostWrap,
+      moved: false,
       pointerId: e.pointerId,
-      sourceEl: el,
-      moved: false
+      sourceEl: el
     };
 
     hideOriginals(source, col, index);
@@ -420,7 +515,7 @@
     if (!dragData) return;
 
     if (dragData.sourceEl && dragData.sourceEl.releasePointerCapture) {
-      try { dragData.sourceEl.releasePointerCapture(dragData.pointerId); } catch (err) {}
+      try { dragData.sourceEl.releasePointerCapture(dragData.pointerId); } catch(err) {}
     }
 
     const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
@@ -515,6 +610,7 @@
   document.getElementById('newGameBtn').addEventListener('click', newGame);
   document.getElementById('winNewGame').addEventListener('click', newGame);
   document.getElementById('undoBtn').addEventListener('click', undo);
+  solveBtn.addEventListener('click', startAutoSolve);
   window.addEventListener('resize', () => render());
 
   // ---------- Init ----------
