@@ -1,4 +1,4 @@
-const CACHE_NAME = 'solitaire-v1.1.122';
+const CACHE_NAME = 'solitaire-v1.1.123';
 const ASSETS = [
   './',
   './index.html',
