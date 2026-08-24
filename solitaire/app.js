@@ -59,6 +59,11 @@
 
   function newGame() {
     autoSolving = false;
+
+    // Zufällige, aber für dieses Spiel einheitliche Kartenrückseite
+    const backColor = Math.random() < 0.5 ? '#b91c1c' : '#1d4ed8'; // rot oder blau
+    document.documentElement.style.setProperty('--back-color-dark', backColor);
+
     let deck = shuffle(makeDeck());
     state = {
       stock: [],

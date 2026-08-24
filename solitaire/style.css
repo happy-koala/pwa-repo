@@ -56,8 +56,17 @@ button.ctrl:active { background: #146b3c; }
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  box-shadow: 0 0 0 3px rgba(255, 213, 74, 0.4), 0 4px 10px rgba(0,0,0,0.4);
+  animation: solvePulse 1.4s ease-in-out infinite;
+  font-size: 15px;
+  padding: 9px 16px;
 }
 .solve-btn.hidden { display: none; }
+
+@keyframes solvePulse {
+  0%, 100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 3px rgba(255, 213, 74, 0.4), 0 4px 10px rgba(0,0,0,0.4); }
+  50% { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 0 6px rgba(255, 213, 74, 0.15), 0 4px 14px rgba(0,0,0,0.5); }
+}
 
 #board {
   flex: 1;
@@ -134,10 +143,12 @@ button.ctrl:active { background: #146b3c; }
 .card.red { color: #cc2222; }
 .card.black { color: #1a1a1a; }
 .card.facedown {
-  background: linear-gradient(135deg, #1a5fb4, #2d7dd2);
+  border: 3px solid #ffffff;
+  background: var(--back-color-dark, #b91c1c);
   background-image:
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.08) 0, rgba(255,255,255,0.08) 4px, transparent 4px, transparent 8px);
-  border: 2px solid #0f3d75;
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0, rgba(255,255,255,0.35) 3px, transparent 3px, transparent 9px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.35) 0, rgba(255,255,255,0.35) 3px, transparent 3px, transparent 9px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5), inset 0 0 0 2px var(--back-color-dark, #b91c1c);
 }
 .card.dragging {
   z-index: 1000 !important;
