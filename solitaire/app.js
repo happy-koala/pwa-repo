@@ -3,7 +3,7 @@
   const suits = ['♠','♥','♦','♣'], redSuits = new Set(['♥','♦']);
   const rankNames = ['','A','2','3','4','5','6','7','8','9','10','J','Q','K'];
   const board = document.getElementById('board'), topRow = document.getElementById('topRow'), tableauRow = document.getElementById('tableauRow');
-  const movesEl = document.getElementById('movesEl'), timerEl = document.getElementById('timerEl'), solveBtn = document.getElementById('solveBtn');
+  const movesEl = document.getElementById('moves'), timerEl = document.getElementById('timer'), solveBtn = document.getElementById('solveBtn');
   const winOverlay = document.getElementById('winOverlay'), winStats = document.getElementById('winStats');
   let state, history = [], dragData = null, timer = null, startedAt = 0, autoSolving = false;
   const clone = v => JSON.parse(JSON.stringify(v));
