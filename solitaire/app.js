@@ -64,7 +64,7 @@
       const c = state.waste[idx];
       const el = cardHTML(c, idx, 'waste');
       const offset = (fanCount - k) * (cw() * 0.22);
-      el.style.left = offset + 'px';
+      el.style.left = -offset + 'px';
       el.style.zIndex = idx;
       waste.append(el);
     }
