@@ -90,7 +90,7 @@
         const card=cardHTML(c,j,'tableau',i);
         card.style.top=`${y}px`;
         el.append(card);
-        y += c.faceUp ? Math.max(20,cw()*.32) : Math.max(16,cw()*.22);
+        y += c.faceUp ? Math.max(28,cw()*.42) : Math.max(16,cw()*.22);
       });
       tableauRow.append(el);
     });
@@ -144,7 +144,7 @@
     const r=z.getBoundingClientRect();
     if(type!=='tableau')return r;
     const col=state.tableau[+z.dataset.dropIndex], c=cw(), ch=parseFloat(getComputedStyle(board).getPropertyValue('--ch'));
-    let y=0; col.forEach(card=>y+=card.faceUp?Math.max(20,c*.32):Math.max(16,c*.22));
+    let y=0; col.forEach(card=>y+=card.faceUp?Math.max(28,c*.42):Math.max(16,c*.22));
     return {left:r.left,top:r.top,right:r.right,bottom:Math.min(r.top+y+ch,r.bottom)};
   }
   function distanceToRect(x,y,r){ return Math.hypot(Math.max(r.left-x,0,x-r.right),Math.max(r.top-y,0,y-r.bottom)); }
