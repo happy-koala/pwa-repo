@@ -8,7 +8,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #0b4f2a;
+  background: #0b3f2a;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overscroll-behavior: none;
   touch-action: none;
@@ -216,7 +216,7 @@ button.ctrl:active {
   flex-direction: row;
   align-items: center;
   gap: 2px;
-  font-size: calc(var(--cw) * .36);
+  font-size: calc(var(--cw) * .42);
   line-height: 1;
   }
 
