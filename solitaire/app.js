@@ -8,6 +8,35 @@
   let state, history = [], dragData = null, timer = null, startedAt = 0, autoSolving = false;
   const clone = v => JSON.parse(JSON.stringify(v));
 
+  // Leichte Heuristik: erhöht die Wahrscheinlichkeit, dass ein Deal lösbar ist,
+  // ohne Lösbarkeit zu garantieren. Bewegt tief vergrabene Asse/Zweien
+  // etwas weiter nach oben in den Tableau-Stapeln.
+  function improveDealHeuristically(deck) {
+    const n = deck.length;
+    const tableauStart = n - 28; // Bereich, der ins Tableau verteilt wird
+
+    const criticalRanks = [1, 2];
+    const swapCandidates = [];
+
+    for (let i = tableauStart; i < n; i++) {
+      const posInTableauBlock = i - tableauStart;
+      if (posInTableauBlock < 15 && criticalRanks.includes(deck[i].rank)) {
+        swapCandidates.push(i);
+      }
+    }
+
+    swapCandidates.forEach(idx => {
+      const targetPool = [];
+      for (let k = n - 10; k < n; k++) targetPool.push(k);
+      for (let k = 0; k < tableauStart; k++) targetPool.push(k);
+
+      if (targetPool.length === 0) return;
+      const targetIdx = targetPool[Math.floor(Math.random() * targetPool.length)];
+
+      [deck[idx], deck[targetIdx]] = [deck[targetIdx], deck[idx]];
+    });
+  }
+
   function newGame() {
     autoSolving = false;
     const color = Math.random() < .5 ? { light:'#b91c1c', dark:'#7a1212' } : { light:'#1d4ed8', dark:'#15339e' };
@@ -15,6 +44,7 @@
     document.documentElement.style.setProperty('--btn-color', color.dark);
     const deck = []; suits.forEach((s, si) => { for (let r=1;r<=13;r++) deck.push({ rank:r, suit:s, color:redSuits.has(s)?'red':'black', faceUp:false, id:si*13+r }); });
     for (let i=deck.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
+    improveDealHeuristically(deck);
     state = { stock:[], waste:[], foundations:[[],[],[],[]], tableau:[[],[],[],[],[],[],[]], moves:0 };
     for (let c=0;c<7;c++) for(let n=0;n<=c;n++) { const card=deck.pop(); card.faceUp=n===c; state.tableau[c].push(card); }
     state.stock=deck; history=[]; startedAt=Date.now(); clearInterval(timer); timer=setInterval(updateTimer,1000); winOverlay?.classList.remove('show'); render();
