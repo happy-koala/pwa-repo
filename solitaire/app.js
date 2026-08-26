@@ -14,45 +14,60 @@
   // Werte dazwischen skalieren die Intensität kontinuierlich.
   const HEURISTIC_STRENGTH = 0.6;
 
-  // Leichte Heuristik: erhöht die Wahrscheinlichkeit, dass ein Deal lösbar ist,
-  // ohne Lösbarkeit zu garantieren. Bewegt tief vergrabene Asse/Zweien
-  // (abhängig von HEURISTIC_STRENGTH) etwas weiter nach oben in den Tableau-Stapeln
-  // bzw. in den oberen Stock-Bereich.
+  // ================== LÖSBARKEITS-HEURISTIK MIT ABGESTUFTEN RÄNGEN ==================
+  // Für Ränge 1-7 eine eigene Basis-Wahrscheinlichkeit und Ziel-Tiefe.
+  // Niedrige Ränge (v.a. Asse) werden mit hoher Priorität weit oben platziert,
+  // höhere Ränge etwas schwächer und tiefer.
+  const RANK_HEURISTICS = [
+    { rank: 1, baseProbability: 0.90, targetDepth: 4  },
+    { rank: 2, baseProbability: 0.80, targetDepth: 6  },
+    { rank: 3, baseProbability: 0.70, targetDepth: 9  },
+    { rank: 4, baseProbability: 0.60, targetDepth: 12 },
+    { rank: 5, baseProbability: 0.50, targetDepth: 15 },
+    { rank: 6, baseProbability: 0.40, targetDepth: 18 },
+    { rank: 7, baseProbability: 0.30, targetDepth: 21 },
+  ];
+
   function improveDealHeuristically(deck) {
     if (HEURISTIC_STRENGTH <= 0) return; // Heuristik aus -> nichts tun
 
     const n = deck.length;
     const tableauStart = n - 28; // Bereich, der ins Tableau verteilt wird
 
-    const criticalRanks = [1, 2];
-    const swapCandidates = [];
+    // Für jeden Rang in RANK_HEURISTICS einzeln durchgehen (aufsteigend, A zuerst)
+    for (const { rank, baseProbability, targetDepth } of RANK_HEURISTICS) {
+      const probability = baseProbability * HEURISTIC_STRENGTH;
+      if (probability <= 0) continue;
 
-    // Wie tief im Tableau-Block eine kritische Karte "vergraben" sein darf,
-    // bevor sie als Kandidat für ein Verschieben gilt.
-    // Bei höherer Heuristik-Stärke wird ein größerer Bereich einbezogen.
-    const depthThreshold = Math.round(15 * HEURISTIC_STRENGTH);
+      // Alle Karten mit diesem Rang im Tableau-Bereich finden
+      const candidates = [];
+      for (let i = tableauStart; i < n; i++) {
+        if (deck[i].rank === rank) {
+          candidates.push(i);
+        }
+      }
 
-    for (let i = tableauStart; i < n; i++) {
-      const posInTableauBlock = i - tableauStart;
-      if (posInTableauBlock < depthThreshold && criticalRanks.includes(deck[i].rank)) {
-        swapCandidates.push(i);
+      for (const idx of candidates) {
+        // Position innerhalb des Tableau-Bereichs (0 = zuerst verteilt/oberste Spalten-Position)
+        const posInTableau = idx - tableauStart;
+
+        // Nur handeln, wenn die Karte tiefer liegt als die Ziel-Tiefe
+        if (posInTableau <= targetDepth) continue;
+
+        // Mit der gegebenen Wahrscheinlichkeit einen Tausch durchführen
+        if (Math.random() > probability) continue;
+
+        // Zufällige Position innerhalb der Ziel-Tiefe im Tableau-Bereich wählen
+        const swapPosInTableau = Math.floor(Math.random() * (targetDepth + 1));
+        const swapIdx = tableauStart + swapPosInTableau;
+
+        // Nur tauschen, wenn die Zielposition nicht bereits denselben Rang hat
+        // (verhindert unnötige/zirkuläre Tauschvorgänge)
+        if (deck[swapIdx].rank !== rank) {
+          [deck[idx], deck[swapIdx]] = [deck[swapIdx], deck[idx]];
+        }
       }
     }
-
-    // Bei niedrigerer Heuristik-Stärke wird nur ein Teil der gefundenen
-    // Kandidaten tatsächlich verschoben (probabilistisch).
-    swapCandidates.forEach(idx => {
-      if (Math.random() > HEURISTIC_STRENGTH) return;
-
-      const targetPool = [];
-      for (let k = n - 10; k < n; k++) targetPool.push(k);
-      for (let k = 0; k < tableauStart; k++) targetPool.push(k);
-
-      if (targetPool.length === 0) return;
-      const targetIdx = targetPool[Math.floor(Math.random() * targetPool.length)];
-
-      [deck[idx], deck[targetIdx]] = [deck[targetIdx], deck[idx]];
-    });
   }
 
   function newGame() {
