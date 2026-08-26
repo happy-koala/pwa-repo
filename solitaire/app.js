@@ -8,24 +8,42 @@
   let state, history = [], dragData = null, timer = null, startedAt = 0, autoSolving = false;
   const clone = v => JSON.parse(JSON.stringify(v));
 
+  // ---------- Heuristik-Einstellung ----------
+  // 0   = Heuristik komplett deaktiviert (reines Zufalls-Shuffle)
+  // 1   = maximale Heuristik-Stärke (so viele kritische Karten wie möglich werden begünstigt)
+  // Werte dazwischen skalieren die Intensität kontinuierlich.
+  const HEURISTIC_STRENGTH = 0.6;
+
   // Leichte Heuristik: erhöht die Wahrscheinlichkeit, dass ein Deal lösbar ist,
   // ohne Lösbarkeit zu garantieren. Bewegt tief vergrabene Asse/Zweien
-  // etwas weiter nach oben in den Tableau-Stapeln.
+  // (abhängig von HEURISTIC_STRENGTH) etwas weiter nach oben in den Tableau-Stapeln
+  // bzw. in den oberen Stock-Bereich.
   function improveDealHeuristically(deck) {
+    if (HEURISTIC_STRENGTH <= 0) return; // Heuristik aus -> nichts tun
+
     const n = deck.length;
     const tableauStart = n - 28; // Bereich, der ins Tableau verteilt wird
 
     const criticalRanks = [1, 2];
     const swapCandidates = [];
 
+    // Wie tief im Tableau-Block eine kritische Karte "vergraben" sein darf,
+    // bevor sie als Kandidat für ein Verschieben gilt.
+    // Bei höherer Heuristik-Stärke wird ein größerer Bereich einbezogen.
+    const depthThreshold = Math.round(15 * HEURISTIC_STRENGTH);
+
     for (let i = tableauStart; i < n; i++) {
       const posInTableauBlock = i - tableauStart;
-      if (posInTableauBlock < 15 && criticalRanks.includes(deck[i].rank)) {
+      if (posInTableauBlock < depthThreshold && criticalRanks.includes(deck[i].rank)) {
         swapCandidates.push(i);
       }
     }
 
+    // Bei niedrigerer Heuristik-Stärke wird nur ein Teil der gefundenen
+    // Kandidaten tatsächlich verschoben (probabilistisch).
     swapCandidates.forEach(idx => {
+      if (Math.random() > HEURISTIC_STRENGTH) return;
+
       const targetPool = [];
       for (let k = n - 10; k < n; k++) targetPool.push(k);
       for (let k = 0; k < tableauStart; k++) targetPool.push(k);
@@ -65,10 +83,13 @@
     return el;
   }
   function addDropZone(el,type,index){ el.dataset.dropType=type; el.dataset.dropIndex=index; }
-
-  // Der Stock wird bewusst NICHT berücksichtigt – er darf noch verdeckte Karten enthalten.
   function allRelevantCardsFaceUp(){
-    return state.waste.every(c=>c.faceUp) && state.tableau.every(col=>col.every(c=>c.faceUp===true));
+    if (state.waste.some(c => !c.faceUp)) return false;
+    for (const col of state.tableau) {
+      if (col.some(c => !c.faceUp)) return false;
+    }
+    const remaining = state.waste.length + state.tableau.reduce((s, c) => s + c.length, 0) + state.stock.length;
+    return remaining > 0;
   }
 
   function cw(){ return parseFloat(getComputedStyle(board).getPropertyValue('--cw')); }
@@ -105,8 +126,7 @@
     topRow.append(waste);
 
     // Stock (rechts außen)
-    const stock=document.createElement('div'); stock.className='pile stock';
-    stock.id='stockPile';
+    const stock=document.createElement('div'); stock.className='pile stock'; stock.id='stockPile';
     addDropZone(stock,'stock',0);
     stock.addEventListener('pointerdown',drawStock);
     if(state.stock.length){
@@ -137,10 +157,8 @@
   }
 
   function updateSolveButton(){
-    if(autoSolving){ solveBtn?.classList.add('hidden'); return; }
-    const remaining = state.waste.length + state.tableau.reduce((s,c)=>s+c.length,0) + state.stock.length;
     const done = state.foundations.every(f=>f.length===13);
-    solveBtn?.classList.toggle('hidden', done || remaining===0 || !allRelevantCardsFaceUp());
+    solveBtn?.classList.toggle('hidden', autoSolving || done || !allRelevantCardsFaceUp());
   }
 
   function drawStock(e){
@@ -238,7 +256,7 @@
     if(valid.length===1)executeDrop('tableau',valid[0],d);
   }
 
-  // ---------- Auto-Solve mit sichtbarer Animation (inkl. Stock-Unterstützung) ----------
+  // ---------- Auto-Solve mit sichtbarer Animation ----------
   function findNextAutoSolveMove(){
     if(state.waste.length>0){
       const card=state.waste[state.waste.length-1];
@@ -253,7 +271,7 @@
       const fIdx=foundationIndexForSuit(card.suit);
       if(canPlaceOnFoundation(card,fIdx)) return {source:'tableau', col, fIdx};
     }
-    // Stock durchsuchen – auch "vergrabene" Karten sind erlaubt
+    // Auch im Stock nach passenden Karten suchen (auch "vergraben")
     for(let i=state.stock.length-1; i>=0; i--){
       const card=state.stock[i];
       const fIdx=foundationIndexForSuit(card.suit);
@@ -267,11 +285,10 @@
       return document.querySelector(`.card[data-source="waste"][data-card-index="${state.waste.length-1}"]`);
     } else if(move.source==='tableau'){
       return document.querySelector(`.card[data-source="tableau"][data-source-index="${move.col}"][data-card-index="${state.tableau[move.col].length-1}"]`);
-    } else if(move.source==='stock'){
-      // Einzelne Stock-Karten sind im DOM nicht individuell greifbar – Ersatz: Stock-Stapel-Element
-      return document.querySelector('#stockPile .card') || document.getElementById('stockPile');
+    } else {
+      // Stock: einzelne Karten sind im DOM nicht individuell vorhanden -> Stock-Stapel als Ersatz
+      return document.getElementById('stockPile');
     }
-    return null;
   }
 
   function autoSolveStep(){
@@ -285,26 +302,26 @@
     if(cardEl && foundationEl){
       const cardRect = cardEl.getBoundingClientRect();
       const targetRect = foundationEl.getBoundingClientRect();
-      const clone = cardEl.cloneNode(true);
-      clone.classList.add('auto-move-clone');
-      clone.style.position='fixed';
-      clone.style.left = `${cardRect.left}px`;
-      clone.style.top = `${cardRect.top}px`;
-      clone.style.width = `${cardRect.width}px`;
-      clone.style.height = `${cardRect.height}px`;
-      clone.style.margin='0';
-      clone.style.zIndex='2000';
-      clone.style.transition='left .22s ease, top .22s ease';
-      document.body.append(clone);
+      const flying = cardEl.cloneNode(true);
+      flying.classList.add('auto-move-clone');
+      flying.style.position='fixed';
+      flying.style.left = `${cardRect.left}px`;
+      flying.style.top = `${cardRect.top}px`;
+      flying.style.width = `${cardRect.width}px`;
+      flying.style.height = `${cardRect.height}px`;
+      flying.style.margin='0';
+      flying.style.zIndex='2000';
+      flying.style.transition='left .22s ease, top .22s ease';
+      document.body.append(flying);
       if(move.source!=='stock') cardEl.style.visibility='hidden';
 
       requestAnimationFrame(()=>{
-        clone.style.left = `${targetRect.left}px`;
-        clone.style.top = `${targetRect.top}px`;
+        flying.style.left = `${targetRect.left}px`;
+        flying.style.top = `${targetRect.top}px`;
       });
 
       setTimeout(()=>{
-        clone.remove();
+        flying.remove();
         performAutoSolveMove(move);
         if(autoSolving) setTimeout(autoSolveStep, 60);
       }, 230);
@@ -316,16 +333,9 @@
 
   function performAutoSolveMove(move){
     let card;
-    if(move.source==='waste'){
-      card = state.waste.pop();
-    } else if(move.source==='tableau'){
-      card = state.tableau[move.col].pop();
-      flipNewTopIfNeeded(state.tableau[move.col]);
-    } else if(move.source==='stock'){
-      // Karte aus dem Stock entfernen, unabhängig von ihrer Position, und aufdecken
-      card = state.stock.splice(move.stockIndex, 1)[0];
-      card.faceUp = true;
-    }
+    if(move.source==='waste') card = state.waste.pop();
+    else if(move.source==='tableau') card = state.tableau[move.col].pop();
+    else { card = state.stock.splice(move.stockIndex,1)[0]; card.faceUp = true; }
     state.foundations[move.fIdx].push(card);
     state.moves++;
     render();
