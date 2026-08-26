@@ -65,7 +65,11 @@
     return el;
   }
   function addDropZone(el,type,index){ el.dataset.dropType=type; el.dataset.dropIndex=index; }
-  function allCardsFaceUp(){ return state.stock.length===0 && state.waste.every(c=>c.faceUp) && state.tableau.every(col=>col.every(c=>c.faceUp===true)); }
+
+  // Der Stock wird bewusst NICHT berücksichtigt – er darf noch verdeckte Karten enthalten.
+  function allRelevantCardsFaceUp(){
+    return state.waste.every(c=>c.faceUp) && state.tableau.every(col=>col.every(c=>c.faceUp===true));
+  }
 
   function cw(){ return parseFloat(getComputedStyle(board).getPropertyValue('--cw')); }
 
@@ -102,6 +106,7 @@
 
     // Stock (rechts außen)
     const stock=document.createElement('div'); stock.className='pile stock';
+    stock.id='stockPile';
     addDropZone(stock,'stock',0);
     stock.addEventListener('pointerdown',drawStock);
     if(state.stock.length){
@@ -127,8 +132,15 @@
 
     document.querySelectorAll('.card').forEach(attachDrag);
     if(movesEl)movesEl.textContent=state.moves;
-    solveBtn?.classList.toggle('hidden', autoSolving || !allCardsFaceUp() || state.foundations.every(f=>f.length===13));
+    updateSolveButton();
     checkWin();
+  }
+
+  function updateSolveButton(){
+    if(autoSolving){ solveBtn?.classList.add('hidden'); return; }
+    const remaining = state.waste.length + state.tableau.reduce((s,c)=>s+c.length,0) + state.stock.length;
+    const done = state.foundations.every(f=>f.length===13);
+    solveBtn?.classList.toggle('hidden', done || remaining===0 || !allRelevantCardsFaceUp());
   }
 
   function drawStock(e){
@@ -226,7 +238,7 @@
     if(valid.length===1)executeDrop('tableau',valid[0],d);
   }
 
-  // ---------- Auto-Solve mit sichtbarer Animation ----------
+  // ---------- Auto-Solve mit sichtbarer Animation (inkl. Stock-Unterstützung) ----------
   function findNextAutoSolveMove(){
     if(state.waste.length>0){
       const card=state.waste[state.waste.length-1];
@@ -241,15 +253,25 @@
       const fIdx=foundationIndexForSuit(card.suit);
       if(canPlaceOnFoundation(card,fIdx)) return {source:'tableau', col, fIdx};
     }
+    // Stock durchsuchen – auch "vergrabene" Karten sind erlaubt
+    for(let i=state.stock.length-1; i>=0; i--){
+      const card=state.stock[i];
+      const fIdx=foundationIndexForSuit(card.suit);
+      if(canPlaceOnFoundation(card,fIdx)) return {source:'stock', stockIndex:i, fIdx};
+    }
     return null;
   }
 
   function getSourceCardEl(move){
     if(move.source==='waste'){
       return document.querySelector(`.card[data-source="waste"][data-card-index="${state.waste.length-1}"]`);
-    } else {
+    } else if(move.source==='tableau'){
       return document.querySelector(`.card[data-source="tableau"][data-source-index="${move.col}"][data-card-index="${state.tableau[move.col].length-1}"]`);
+    } else if(move.source==='stock'){
+      // Einzelne Stock-Karten sind im DOM nicht individuell greifbar – Ersatz: Stock-Stapel-Element
+      return document.querySelector('#stockPile .card') || document.getElementById('stockPile');
     }
+    return null;
   }
 
   function autoSolveStep(){
@@ -274,7 +296,7 @@
       clone.style.zIndex='2000';
       clone.style.transition='left .22s ease, top .22s ease';
       document.body.append(clone);
-      cardEl.style.visibility='hidden';
+      if(move.source!=='stock') cardEl.style.visibility='hidden';
 
       requestAnimationFrame(()=>{
         clone.style.left = `${targetRect.left}px`;
@@ -294,8 +316,16 @@
 
   function performAutoSolveMove(move){
     let card;
-    if(move.source==='waste') card = state.waste.pop();
-    else card = state.tableau[move.col].pop();
+    if(move.source==='waste'){
+      card = state.waste.pop();
+    } else if(move.source==='tableau'){
+      card = state.tableau[move.col].pop();
+      flipNewTopIfNeeded(state.tableau[move.col]);
+    } else if(move.source==='stock'){
+      // Karte aus dem Stock entfernen, unabhängig von ihrer Position, und aufdecken
+      card = state.stock.splice(move.stockIndex, 1)[0];
+      card.faceUp = true;
+    }
     state.foundations[move.fIdx].push(card);
     state.moves++;
     render();
