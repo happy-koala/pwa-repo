@@ -4,6 +4,11 @@ const apps = [
     folder: "solitaire",
     icon: "icon-192.png"
   }
+   {
+     name: "Flaschen sortieren",
+     folder: "bottle-sort",
+  //   icon: "icon-192.png"
+  }
   // Weitere Apps hier ergänzen:
   // {
   //   name: "Nächstes Spiel",
