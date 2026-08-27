@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bottle-sort-shell-v1';
+const CACHE_NAME = 'bottle-sort-shell-v1.1.4';
 
 const ASSETS = [
   './',
