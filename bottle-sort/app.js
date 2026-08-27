@@ -12,7 +12,9 @@ let selectedIndex = null;
 let moveCount = 0;
 let level = 1;
 let history = [];
-let numColors = 6; // Standard: Mittel
+let numColors = 6;
+let customRows = 0; // 0 = automatisch
+let customCols = 0;
 let isAnimating = false;
 
 const bottleContainer = document.getElementById('bottleContainer');
@@ -23,6 +25,8 @@ const winStatsEl = document.getElementById('winStats');
 const difficultySelect = document.getElementById('difficultySelect');
 const customWrap = document.getElementById('customWrap');
 const customColorsInput = document.getElementById('customColors');
+const rowsInput = document.getElementById('rowsInput');
+const colsInput = document.getElementById('colsInput');
 
 difficultySelect.addEventListener('change', () => {
   const val = difficultySelect.value;
@@ -43,6 +47,14 @@ customColorsInput.addEventListener('input', () => {
   numColors = v;
 });
 
+rowsInput.addEventListener('input', () => {
+  customRows = Math.max(0, parseInt(rowsInput.value) || 0);
+});
+
+colsInput.addEventListener('input', () => {
+  customCols = Math.max(0, parseInt(colsInput.value) || 0);
+});
+
 function generateLevel(nColors) {
   let stacks;
   do {
@@ -52,7 +64,7 @@ function generateLevel(nColors) {
 }
 
 function createSolvableStacks(nColors) {
-  const numBottles = nColors + 2; // extra leere Flaschen
+  const numBottles = nColors + 2;
   const units = [];
   for (let c = 0; c < nColors; c++) {
     for (let i = 0; i < CAPACITY; i++) units.push(c);
@@ -76,24 +88,53 @@ function createSolvableStacks(nColors) {
   return stacks;
 }
 
+// Bestimmt Spaltenanzahl: manuell gesetzt oder automatisch aus Flaschenanzahl
+function determineCols(totalBottles) {
+  if (customCols > 0) return customCols;
+  // automatische Heuristik: möglichst quadratisch, max 8 pro Reihe
+  const maxPerRow = window.innerWidth < 500 ? 5 : 8;
+  let cols = Math.ceil(Math.sqrt(totalBottles));
+  cols = Math.min(cols, maxPerRow, totalBottles);
+  return Math.max(1, cols);
+}
+
 function updateGridSizing() {
-  const n = bottles.length;
-  // Größe grob nach Anzahl Flaschen skalieren, damit es auf Handy passt
-  let w = 56, h = 190;
-  if (n > 8) { w = 46; h = 165; }
-  if (n > 12) { w = 38; h = 145; }
-  if (n > 16) { w = 32; h = 125; }
-  if (window.innerWidth < 500) {
-    w = Math.max(24, w - 12);
-    h = Math.max(90, h - 30);
-  }
-  bottleContainer.style.setProperty('--bottle-w', w + 'px');
-  bottleContainer.style.setProperty('--bottle-h', h + 'px');
+  const total = bottles.length;
+  const cols = determineCols(total);
+  const rows = customRows > 0 ? customRows : Math.ceil(total / cols);
+
+  bottleContainer.style.setProperty('--grid-cols', cols);
+
+  // Verfügbaren Platz ermitteln
+  const containerWidth = bottleContainer.clientWidth || (window.innerWidth - 24);
+  const headerFooterHeight = 260; // grobe Reserve für Header/Controls/Bar
+  const availableHeight = Math.max(200, window.innerHeight - headerFooterHeight);
+
+  const gap = cols > 8 ? 8 : cols > 5 ? 12 : 16;
+  bottleContainer.style.setProperty('--grid-gap', gap + 'px');
+
+  // Breite pro Flasche aus Spaltenzahl berechnen
+  const totalGapWidth = gap * (cols - 1);
+  let bottleW = Math.floor((containerWidth - totalGapWidth) / cols * 0.72);
+
+  // Höhe pro Flasche aus Zeilenzahl berechnen (inkl. Innenabstand)
+  const totalGapHeight = gap * (rows - 1);
+  let bottleH = Math.floor((availableHeight - totalGapHeight) / rows * 0.85);
+
+  // Sinnvolle Grenzen setzen
+  bottleW = Math.max(20, Math.min(70, bottleW));
+  bottleH = Math.max(70, Math.min(220, bottleH));
+
+  // Verhältnis beibehalten (Flasche nicht zu breit im Vergleich zur Höhe)
+  const maxWFromH = bottleH * 0.35;
+  bottleW = Math.min(bottleW, maxWFromH);
+
+  bottleContainer.style.setProperty('--bottle-w', bottleW + 'px');
+  bottleContainer.style.setProperty('--bottle-h', bottleH + 'px');
   bottleContainer.style.setProperty('--seg-count', CAPACITY);
 }
 
 function renderBottles() {
-  updateGridSizing();
   bottleContainer.innerHTML = '';
   bottles.forEach((stack, i) => {
     const wrap = document.createElement('div');
@@ -119,6 +160,9 @@ function renderBottles() {
     wrap.addEventListener('click', () => handleBottleClick(i));
     bottleContainer.appendChild(wrap);
   });
+
+  // Nach dem Rendern Größe berechnen (Container hat jetzt Kinder -> clientWidth korrekt)
+  updateGridSizing();
 }
 
 function handleBottleClick(index) {
@@ -194,27 +238,23 @@ function animatePour(fromIdx, toIdx, info, callback) {
   const fromRect = fromWrap.getBoundingClientRect();
   const toRect = toWrap.getBoundingClientRect();
 
-  // Bestimme Kipprichtung: Flasche über die Ziel-Flasche bewegen & kippen
   const movingRight = fromRect.left < toRect.left;
   const dx = (toRect.left - fromRect.left) + (movingRight ? 20 : -20);
-  const dy = -Math.max(60, fromRect.height * 0.35);
+  const dy = -Math.max(50, fromRect.height * 0.35);
 
   fromWrap.classList.add('pouring-from');
   fromWrap.style.transition = 'transform 0.4s ease';
   fromWrap.style.transform = `translate(${dx}px, ${dy}px) rotate(${movingRight ? -80 : 80}deg)`;
 
-  // Stream-Tropfen-Element erzeugen
   const stream = document.createElement('div');
   stream.className = 'pour-stream';
   stream.style.background = COLORS[info.color];
-  stream.style.height = '40px';
+  stream.style.height = Math.max(20, fromRect.height * 0.2) + 'px';
   stream.style.left = (toRect.left + toRect.width / 2 - 3) + 'px';
   stream.style.top = (toRect.top - 10) + 'px';
   document.body.appendChild(stream);
-  document.body.style.position = document.body.style.position || 'relative';
 
   setTimeout(() => {
-    // Flüssigkeit tatsächlich umfüllen (Daten)
     history.push(JSON.parse(JSON.stringify(bottles)));
     const from = bottles[fromIdx];
     const to = bottles[toIdx];
@@ -224,11 +264,9 @@ function animatePour(fromIdx, toIdx, info, callback) {
     moveCount++;
     moveCounterEl.textContent = `Züge: ${moveCount}`;
 
-    // Segmente sofort aktualisieren, damit man während Rückbewegung das Ergebnis sieht
     updateSegmentsOnly(fromIdx, toIdx);
 
     setTimeout(() => {
-      // Zurückbewegen
       fromWrap.style.transform = '';
       stream.remove();
       setTimeout(() => {
@@ -311,7 +349,11 @@ document.getElementById('nextLevelBtn').addEventListener('click', () => {
   newGame();
 });
 
-window.addEventListener('resize', updateGridSizing);
+let resizeTimeout;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(updateGridSizing, 150);
+});
 
 function initGame() {
   newGame();
