@@ -49,9 +49,6 @@
     return amount;
   }
 
-  // Reverse-mixing begins with a solved board and undoes legal pours by
-  // splitting a contiguous top run into another bottle. Reversing those
-  // operations is a legal solution path back to the solved state.
   function reverseMixSolvedState(total, count) {
     bottles = makeSolved(total, count);
     const rounds = Math.max(120, total * count * 16);
@@ -63,8 +60,6 @@
         if (!run) continue;
         for (let to = 0; to < total; to++) {
           const room = CAPACITY - bottles[to].length;
-          // If the run is not the whole bottle, leave one matching unit behind;
-          // otherwise the inverse pour would land on a different color.
           const reversibleAmount = run === bottles[from].length ? run : run - 1;
           const maxAmount = Math.min(reversibleAmount, room);
           if (from !== to && maxAmount > 0 && from !== lastTo && to !== lastFrom) candidates.push([from, to, maxAmount]);
