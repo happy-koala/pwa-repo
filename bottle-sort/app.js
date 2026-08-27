@@ -7,6 +7,8 @@ const COLORS = [
 ];
 
 const CAPACITY = 4;
+const BOTTLE_RATIO = 3.5; // Höhe = Breite * 3.5
+
 let bottles = [];
 let selectedIndex = null;
 let moveCount = 0;
@@ -55,6 +57,15 @@ colsInput.addEventListener('input', () => {
   customCols = Math.max(0, parseInt(colsInput.value) || 0);
 });
 
+// Berechnet die Gesamtzahl der Flaschen basierend auf Zeilen/Spalten (falls gesetzt)
+function getTotalBottleSlots(minRequired) {
+  if (customRows > 0 && customCols > 0) {
+    return customRows * customCols;
+  }
+  // automatisch: minRequired = Farben + 2 leere
+  return minRequired;
+}
+
 function generateLevel(nColors) {
   let stacks;
   do {
@@ -64,7 +75,12 @@ function generateLevel(nColors) {
 }
 
 function createSolvableStacks(nColors) {
-  const numBottles = nColors + 2;
+  const minRequired = nColors + 2; // mind. Farben + 2 leere Flaschen nötig
+  const totalSlots = getTotalBottleSlots(minRequired);
+
+  // Falls Grid zu klein für die gewählte Farbenzahl ist, auf Minimum anheben
+  const numBottles = Math.max(totalSlots, minRequired);
+
   const units = [];
   for (let c = 0; c < nColors; c++) {
     for (let i = 0; i < CAPACITY; i++) units.push(c);
@@ -81,6 +97,7 @@ function createSolvableStacks(nColors) {
       stacks[b].push(units[idx++]);
     }
   }
+  // restliche Flaschen bleiben leer
 
   const alreadySolved = stacks.every(s => s.length === 0 || (s.length === CAPACITY && s.every(v => v === s[0])));
   if (alreadySolved) return null;
@@ -88,10 +105,9 @@ function createSolvableStacks(nColors) {
   return stacks;
 }
 
-// Bestimmt Spaltenanzahl: manuell gesetzt oder automatisch aus Flaschenanzahl
+// Bestimmt Spaltenanzahl fürs Grid-Layout
 function determineCols(totalBottles) {
   if (customCols > 0) return customCols;
-  // automatische Heuristik: möglichst quadratisch, max 8 pro Reihe
   const maxPerRow = window.innerWidth < 500 ? 5 : 8;
   let cols = Math.ceil(Math.sqrt(totalBottles));
   cols = Math.min(cols, maxPerRow, totalBottles);
@@ -105,29 +121,31 @@ function updateGridSizing() {
 
   bottleContainer.style.setProperty('--grid-cols', cols);
 
-  // Verfügbaren Platz ermitteln
   const containerWidth = bottleContainer.clientWidth || (window.innerWidth - 24);
-  const headerFooterHeight = 260; // grobe Reserve für Header/Controls/Bar
+  const headerFooterHeight = 260;
   const availableHeight = Math.max(200, window.innerHeight - headerFooterHeight);
 
   const gap = cols > 8 ? 8 : cols > 5 ? 12 : 16;
   bottleContainer.style.setProperty('--grid-gap', gap + 'px');
 
-  // Breite pro Flasche aus Spaltenzahl berechnen
+  // Breite aus Spaltenzahl
   const totalGapWidth = gap * (cols - 1);
-  let bottleW = Math.floor((containerWidth - totalGapWidth) / cols * 0.72);
+  let bottleW = Math.floor((containerWidth - totalGapWidth) / cols * 0.8);
 
-  // Höhe pro Flasche aus Zeilenzahl berechnen (inkl. Innenabstand)
+  // Höhe aus Zeilenzahl
   const totalGapHeight = gap * (rows - 1);
-  let bottleH = Math.floor((availableHeight - totalGapHeight) / rows * 0.85);
+  let bottleHFromRows = Math.floor((availableHeight - totalGapHeight) / rows * 0.9);
 
-  // Sinnvolle Grenzen setzen
-  bottleW = Math.max(20, Math.min(70, bottleW));
-  bottleH = Math.max(70, Math.min(220, bottleH));
+  // Feste Seitenverhältnis-Berechnung: Höhe = Breite * RATIO
+  let bottleHFromRatio = bottleW * BOTTLE_RATIO;
 
-  // Verhältnis beibehalten (Flasche nicht zu breit im Vergleich zur Höhe)
-  const maxWFromH = bottleH * 0.35;
-  bottleW = Math.min(bottleW, maxWFromH);
+  // Den limitierenden Faktor nehmen (damit es nie überläuft)
+  let bottleH = Math.min(bottleHFromRows, bottleHFromRatio);
+  bottleW = bottleH / BOTTLE_RATIO;
+
+  // Sinnvolle Grenzen
+  bottleW = Math.max(18, Math.min(70, bottleW));
+  bottleH = bottleW * BOTTLE_RATIO;
 
   bottleContainer.style.setProperty('--bottle-w', bottleW + 'px');
   bottleContainer.style.setProperty('--bottle-h', bottleH + 'px');
@@ -161,7 +179,6 @@ function renderBottles() {
     bottleContainer.appendChild(wrap);
   });
 
-  // Nach dem Rendern Größe berechnen (Container hat jetzt Kinder -> clientWidth korrekt)
   updateGridSizing();
 }
 
@@ -309,7 +326,7 @@ function newGame() {
   selectedIndex = null;
   history = [];
   moveCounterEl.textContent = `Züge: 0`;
-  levelLabelEl.textContent = `Level ${level} (${numColors} Farben)`;
+  levelLabelEl.textContent = `Level ${level} (${numColors} Farben, ${bottles.length} Flaschen)`;
   winOverlay.classList.add('hidden');
   renderBottles();
   history = [JSON.parse(JSON.stringify(bottles))];
