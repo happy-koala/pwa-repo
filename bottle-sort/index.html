@@ -19,6 +19,20 @@
     </div>
   </header>
 
+  <div id="difficultyBar">
+    <label for="difficultySelect">Schwierigkeit:</label>
+    <select id="difficultySelect">
+      <option value="easy">Einfach (4 Farben)</option>
+      <option value="medium" selected>Mittel (6 Farben)</option>
+      <option value="hard">Schwer (8 Farben)</option>
+      <option value="extreme">Extrem (12 Farben)</option>
+      <option value="custom">Benutzerdefiniert…</option>
+    </select>
+    <span id="customWrap" class="hidden">
+      <input type="number" id="customColors" min="2" max="20" value="6"> Farben
+    </span>
+  </div>
+
   <div id="bottleContainer"></div>
 
   <div class="controls">

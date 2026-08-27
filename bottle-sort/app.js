@@ -1,7 +1,9 @@
 const COLORS = [
   '#ef4444', '#3b82f6', '#22c55e', '#eab308',
   '#a855f7', '#ec4899', '#14b8a6', '#f97316',
-  '#84cc16', '#06b6d4'
+  '#84cc16', '#06b6d4', '#f43f5e', '#8b5cf6',
+  '#0ea5e9', '#d946ef', '#65a30d', '#fb923c',
+  '#4ade80', '#facc15', '#38bdf8', '#e879f9'
 ];
 
 const CAPACITY = 4;
@@ -10,28 +12,51 @@ let selectedIndex = null;
 let moveCount = 0;
 let level = 1;
 let history = [];
+let numColors = 6; // Standard: Mittel
+let isAnimating = false;
 
 const bottleContainer = document.getElementById('bottleContainer');
 const moveCounterEl = document.getElementById('moveCounter');
 const levelLabelEl = document.getElementById('levelLabel');
 const winOverlay = document.getElementById('winOverlay');
 const winStatsEl = document.getElementById('winStats');
+const difficultySelect = document.getElementById('difficultySelect');
+const customWrap = document.getElementById('customWrap');
+const customColorsInput = document.getElementById('customColors');
 
-function generateLevel(numColors) {
+difficultySelect.addEventListener('change', () => {
+  const val = difficultySelect.value;
+  customWrap.classList.toggle('hidden', val !== 'custom');
+  switch (val) {
+    case 'easy': numColors = 4; break;
+    case 'medium': numColors = 6; break;
+    case 'hard': numColors = 8; break;
+    case 'extreme': numColors = 12; break;
+    case 'custom': numColors = parseInt(customColorsInput.value) || 6; break;
+  }
+});
+
+customColorsInput.addEventListener('input', () => {
+  let v = parseInt(customColorsInput.value);
+  if (isNaN(v)) v = 6;
+  v = Math.max(2, Math.min(COLORS.length, v));
+  numColors = v;
+});
+
+function generateLevel(nColors) {
   let stacks;
   do {
-    stacks = createSolvableStacks(numColors);
+    stacks = createSolvableStacks(nColors);
   } while (!stacks);
   return stacks;
 }
 
-function createSolvableStacks(numColors) {
-  const numBottles = numColors + 2; // extra leere Flaschen
+function createSolvableStacks(nColors) {
+  const numBottles = nColors + 2; // extra leere Flaschen
   const units = [];
-  for (let c = 0; c < numColors; c++) {
+  for (let c = 0; c < nColors; c++) {
     for (let i = 0; i < CAPACITY; i++) units.push(c);
   }
-  // Shuffle
   for (let i = units.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [units[i], units[j]] = [units[j], units[i]];
@@ -39,29 +64,46 @@ function createSolvableStacks(numColors) {
 
   const stacks = Array.from({ length: numBottles }, () => []);
   let idx = 0;
-  for (let b = 0; b < numColors; b++) {
+  for (let b = 0; b < nColors; b++) {
     for (let i = 0; i < CAPACITY; i++) {
       stacks[b].push(units[idx++]);
     }
   }
-  // restliche Flaschen bleiben leer
 
-  // Prüfen ob nicht bereits gelöst (jede Farbe komplett in einer Flasche)
   const alreadySolved = stacks.every(s => s.length === 0 || (s.length === CAPACITY && s.every(v => v === s[0])));
   if (alreadySolved) return null;
 
   return stacks;
 }
 
+function updateGridSizing() {
+  const n = bottles.length;
+  // Größe grob nach Anzahl Flaschen skalieren, damit es auf Handy passt
+  let w = 56, h = 190;
+  if (n > 8) { w = 46; h = 165; }
+  if (n > 12) { w = 38; h = 145; }
+  if (n > 16) { w = 32; h = 125; }
+  if (window.innerWidth < 500) {
+    w = Math.max(24, w - 12);
+    h = Math.max(90, h - 30);
+  }
+  bottleContainer.style.setProperty('--bottle-w', w + 'px');
+  bottleContainer.style.setProperty('--bottle-h', h + 'px');
+  bottleContainer.style.setProperty('--seg-count', CAPACITY);
+}
+
 function renderBottles() {
+  updateGridSizing();
   bottleContainer.innerHTML = '';
   bottles.forEach((stack, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bottle-wrap';
+    wrap.dataset.index = i;
+    if (i === selectedIndex) wrap.classList.add('selected');
+
     const bottleEl = document.createElement('div');
     bottleEl.className = 'bottle';
-    bottleEl.dataset.index = i;
-    if (i === selectedIndex) bottleEl.classList.add('selected');
 
-    // Segmente von unten nach oben rendern
     for (let s = 0; s < CAPACITY; s++) {
       const seg = document.createElement('div');
       seg.className = 'segment';
@@ -73,14 +115,17 @@ function renderBottles() {
       bottleEl.appendChild(seg);
     }
 
-    bottleEl.addEventListener('click', () => handleBottleClick(i));
-    bottleContainer.appendChild(bottleEl);
+    wrap.appendChild(bottleEl);
+    wrap.addEventListener('click', () => handleBottleClick(i));
+    bottleContainer.appendChild(wrap);
   });
 }
 
 function handleBottleClick(index) {
+  if (isAnimating) return;
+
   if (selectedIndex === null) {
-    if (bottles[index].length === 0) return; // leere Flasche kann nicht Quelle sein
+    if (bottles[index].length === 0) return;
     selectedIndex = index;
     renderBottles();
     return;
@@ -92,35 +137,41 @@ function handleBottleClick(index) {
     return;
   }
 
-  const success = pourLiquid(selectedIndex, index);
-  if (!success) {
-    flashInvalid(index);
-  }
+  const fromIdx = selectedIndex;
+  const toIdx = index;
   selectedIndex = null;
-  renderBottles();
 
-  if (success) {
-    checkWin();
+  const info = getPourInfo(fromIdx, toIdx);
+  if (!info.valid) {
+    flashInvalid(toIdx);
+    renderBottles();
+    return;
   }
+
+  animatePour(fromIdx, toIdx, info, () => {
+    renderBottles();
+    checkWin();
+  });
 }
 
 function flashInvalid(index) {
+  renderBottles();
   const el = bottleContainer.children[index];
+  if (!el) return;
   el.classList.add('invalid');
   setTimeout(() => el.classList.remove('invalid'), 300);
 }
 
-function pourLiquid(fromIdx, toIdx) {
+function getPourInfo(fromIdx, toIdx) {
   const from = bottles[fromIdx];
   const to = bottles[toIdx];
 
-  if (from.length === 0) return false;
-  if (to.length >= CAPACITY) return false;
+  if (from.length === 0) return { valid: false };
+  if (to.length >= CAPACITY) return { valid: false };
 
   const topColor = from[from.length - 1];
-  if (to.length > 0 && to[to.length - 1] !== topColor) return false;
+  if (to.length > 0 && to[to.length - 1] !== topColor) return { valid: false };
 
-  // Anzahl gleicher Farbe oben in "from"
   let count = 0;
   for (let i = from.length - 1; i >= 0; i--) {
     if (from[i] === topColor) count++;
@@ -130,18 +181,77 @@ function pourLiquid(fromIdx, toIdx) {
   const space = CAPACITY - to.length;
   const amount = Math.min(count, space);
 
-  if (amount <= 0) return false;
+  if (amount <= 0) return { valid: false };
 
-  // Speichere Historie
-  history.push(JSON.parse(JSON.stringify(bottles)));
+  return { valid: true, amount, color: topColor };
+}
 
-  for (let i = 0; i < amount; i++) {
-    to.push(from.pop());
-  }
+function animatePour(fromIdx, toIdx, info, callback) {
+  isAnimating = true;
+  const fromWrap = bottleContainer.children[fromIdx];
+  const toWrap = bottleContainer.children[toIdx];
 
-  moveCount++;
-  moveCounterEl.textContent = `Züge: ${moveCount}`;
-  return true;
+  const fromRect = fromWrap.getBoundingClientRect();
+  const toRect = toWrap.getBoundingClientRect();
+
+  // Bestimme Kipprichtung: Flasche über die Ziel-Flasche bewegen & kippen
+  const movingRight = fromRect.left < toRect.left;
+  const dx = (toRect.left - fromRect.left) + (movingRight ? 20 : -20);
+  const dy = -Math.max(60, fromRect.height * 0.35);
+
+  fromWrap.classList.add('pouring-from');
+  fromWrap.style.transition = 'transform 0.4s ease';
+  fromWrap.style.transform = `translate(${dx}px, ${dy}px) rotate(${movingRight ? -80 : 80}deg)`;
+
+  // Stream-Tropfen-Element erzeugen
+  const stream = document.createElement('div');
+  stream.className = 'pour-stream';
+  stream.style.background = COLORS[info.color];
+  stream.style.height = '40px';
+  stream.style.left = (toRect.left + toRect.width / 2 - 3) + 'px';
+  stream.style.top = (toRect.top - 10) + 'px';
+  document.body.appendChild(stream);
+  document.body.style.position = document.body.style.position || 'relative';
+
+  setTimeout(() => {
+    // Flüssigkeit tatsächlich umfüllen (Daten)
+    history.push(JSON.parse(JSON.stringify(bottles)));
+    const from = bottles[fromIdx];
+    const to = bottles[toIdx];
+    for (let i = 0; i < info.amount; i++) {
+      to.push(from.pop());
+    }
+    moveCount++;
+    moveCounterEl.textContent = `Züge: ${moveCount}`;
+
+    // Segmente sofort aktualisieren, damit man während Rückbewegung das Ergebnis sieht
+    updateSegmentsOnly(fromIdx, toIdx);
+
+    setTimeout(() => {
+      // Zurückbewegen
+      fromWrap.style.transform = '';
+      stream.remove();
+      setTimeout(() => {
+        fromWrap.classList.remove('pouring-from');
+        fromWrap.style.transition = '';
+        isAnimating = false;
+        callback();
+      }, 250);
+    }, 220);
+  }, 380);
+}
+
+function updateSegmentsOnly(fromIdx, toIdx) {
+  [fromIdx, toIdx].forEach(idx => {
+    const wrap = bottleContainer.children[idx];
+    if (!wrap) return;
+    const bottleEl = wrap.querySelector('.bottle');
+    const segs = bottleEl.querySelectorAll('.segment');
+    const stack = bottles[idx];
+    segs.forEach((seg, s) => {
+      seg.style.background = s < stack.length ? COLORS[stack[s]] : 'transparent';
+    });
+  });
 }
 
 function checkWin() {
@@ -156,15 +266,15 @@ function checkWin() {
 }
 
 function newGame() {
-  const numColors = Math.min(4 + Math.floor(level / 2), COLORS.length);
   bottles = generateLevel(numColors);
   moveCount = 0;
   selectedIndex = null;
   history = [];
   moveCounterEl.textContent = `Züge: 0`;
-  levelLabelEl.textContent = `Level ${level}`;
+  levelLabelEl.textContent = `Level ${level} (${numColors} Farben)`;
   winOverlay.classList.add('hidden');
   renderBottles();
+  history = [JSON.parse(JSON.stringify(bottles))];
 }
 
 function resetLevel() {
@@ -173,14 +283,15 @@ function resetLevel() {
   }
   moveCount = 0;
   selectedIndex = null;
-  history = [];
+  history = [JSON.parse(JSON.stringify(bottles))];
   moveCounterEl.textContent = `Züge: 0`;
   renderBottles();
 }
 
 function undoMove() {
-  if (history.length === 0) return;
-  bottles = history.pop();
+  if (history.length <= 1) return;
+  history.pop();
+  bottles = JSON.parse(JSON.stringify(history[history.length - 1]));
   moveCount = Math.max(0, moveCount - 1);
   moveCounterEl.textContent = `Züge: ${moveCount}`;
   selectedIndex = null;
@@ -188,6 +299,7 @@ function undoMove() {
 }
 
 document.getElementById('newGameBtn').addEventListener('click', () => {
+  level = 1;
   newGame();
 });
 
@@ -199,10 +311,10 @@ document.getElementById('nextLevelBtn').addEventListener('click', () => {
   newGame();
 });
 
-// Erste Runde starten, dabei erste Historie sichern
+window.addEventListener('resize', updateGridSizing);
+
 function initGame() {
   newGame();
-  history = [JSON.parse(JSON.stringify(bottles))];
 }
 
 initGame();
@@ -212,7 +324,6 @@ const canvas = document.getElementById('confettiCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
-
 window.addEventListener('resize', () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
