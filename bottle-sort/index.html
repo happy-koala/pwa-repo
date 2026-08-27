@@ -15,10 +15,10 @@
     <section class="controls" aria-label="Spieloptionen">
       <label>Zeilen<select id="rows"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
       <label>Spalten<select id="columns"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option></select></label>
-      <label>Farben<select id="colors"><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
-      <button class="button primary" id="new-game" type="button">Neues Spiel</button>
+      <label>Farben<select id="colors"><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label><br>
+      <button class="button primary" id="new-game" type="button">Neues Spiel</button><button class="button secondary" id="undo" type="button">Rückgängig</button>
     </section>
-    <section class="game-card"><div class="board" id="board" role="grid"></div><div class="game-footer"><p>Tippe eine Flasche an, dann das Ziel.</p><button class="button secondary" id="undo" type="button">Rückgängig</button></div></section>
+    <section class="game-card"><div class="board" id="board" role="grid"></div></section>
   </main>
   <div class="overlay" id="win-overlay" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="win-title"><p class="eyebrow">PUZZLE GELÖST</p><h2 id="win-title">Gewonnen!</h2><p id="win-moves"></p><button class="button primary" id="win-new" type="button">Neues Spiel</button></div></div>
   <script src="app.js"></script>
