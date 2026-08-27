@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Flaschen-Sortierspiel</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1e293b">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>💧 Flaschen-Sortierspiel</h1>
+    <div class="stats">
+      <span id="moveCounter">Züge: 0</span>
+      <span id="levelLabel">Level 1</span>
+    </div>
+  </header>
+
+  <div id="bottleContainer"></div>
+
+  <div class="controls">
+    <button id="newGameBtn">🔄 Neues Spiel</button>
+    <button id="resetBtn">↩️ Zurücksetzen</button>
+    <button id="undoBtn">⬅️ Rückgängig</button>
+  </div>
+
+  <div id="winOverlay" class="hidden">
+    <div class="winBox">
+      <h2>🎉 Gelöst! 🎉</h2>
+      <p id="winStats"></p>
+      <button id="nextLevelBtn">Nächstes Level</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+
+<script src="./app.js"></script>
+</body>
+</html>
