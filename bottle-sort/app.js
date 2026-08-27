@@ -1,435 +1,210 @@
-const COLORS = [
-  '#ef4444', '#3b82f6', '#22c55e', '#eab308',
-  '#a855f7', '#ec4899', '#14b8a6', '#f97316',
-  '#84cc16', '#06b6d4', '#f43f5e', '#8b5cf6',
-  '#0ea5e9', '#d946ef', '#65a30d', '#fb923c',
-  '#4ade80', '#facc15', '#38bdf8', '#e879f9'
-];
+(() => {
+  'use strict';
 
-const CAPACITY = 4;
-const BOTTLE_RATIO = 3.5; // Höhe = Breite * 3.5
+  const CAPACITY = 4;
+  const PALETTE = ['#eb674d','#f3a43b','#f5d547','#9acb52','#42b883','#27a7a0','#3c91c9','#5367c9','#8355b8','#bd5799','#e85d8b','#ec7f9c','#9b684d','#6f8790','#d45c32','#86b84d','#19a997','#4271a8','#7560a8','#b34862'];
+  const $ = id => document.getElementById(id);
+  let bottles = [], history = [], selected = null, moves = 0, level = 0, animating = false;
+  let confettiFrame = 0;
 
-let bottles = [];
-let selectedIndex = null;
-let moveCount = 0;
-let level = 1;
-let history = [];
-let numColors = 6;
-let customRows = 0; // 0 = automatisch
-let customCols = 0;
-let isAnimating = false;
-
-const bottleContainer = document.getElementById('bottleContainer');
-const moveCounterEl = document.getElementById('moveCounter');
-const levelLabelEl = document.getElementById('levelLabel');
-const winOverlay = document.getElementById('winOverlay');
-const winStatsEl = document.getElementById('winStats');
-const difficultySelect = document.getElementById('difficultySelect');
-const customWrap = document.getElementById('customWrap');
-const customColorsInput = document.getElementById('customColors');
-const rowsInput = document.getElementById('rowsInput');
-const colsInput = document.getElementById('colsInput');
-
-difficultySelect.addEventListener('change', () => {
-  const val = difficultySelect.value;
-  customWrap.classList.toggle('hidden', val !== 'custom');
-  switch (val) {
-    case 'easy': numColors = 4; break;
-    case 'medium': numColors = 6; break;
-    case 'hard': numColors = 8; break;
-    case 'extreme': numColors = 12; break;
-    case 'custom': numColors = parseInt(customColorsInput.value) || 6; break;
-  }
-});
-
-customColorsInput.addEventListener('input', () => {
-  let v = parseInt(customColorsInput.value);
-  if (isNaN(v)) v = 6;
-  v = Math.max(2, Math.min(COLORS.length, v));
-  numColors = v;
-});
-
-rowsInput.addEventListener('input', () => {
-  customRows = Math.max(0, parseInt(rowsInput.value) || 0);
-});
-
-colsInput.addEventListener('input', () => {
-  customCols = Math.max(0, parseInt(colsInput.value) || 0);
-});
-
-// Berechnet die Gesamtzahl der Flaschen basierend auf Zeilen/Spalten (falls gesetzt)
-function getTotalBottleSlots(minRequired) {
-  if (customRows > 0 && customCols > 0) {
-    return customRows * customCols;
-  }
-  // automatisch: minRequired = Farben + 2 leere
-  return minRequired;
-}
-
-function generateLevel(nColors) {
-  let stacks;
-  do {
-    stacks = createSolvableStacks(nColors);
-  } while (!stacks);
-  return stacks;
-}
-
-function createSolvableStacks(nColors) {
-  const minRequired = nColors + 2; // mind. Farben + 2 leere Flaschen nötig
-  const totalSlots = getTotalBottleSlots(minRequired);
-
-  // Falls Grid zu klein für die gewählte Farbenzahl ist, auf Minimum anheben
-  const numBottles = Math.max(totalSlots, minRequired);
-
-  const units = [];
-  for (let c = 0; c < nColors; c++) {
-    for (let i = 0; i < CAPACITY; i++) units.push(c);
-  }
-  for (let i = units.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [units[i], units[j]] = [units[j], units[i]];
+  function fillSelects() {
+    const rows = $('rowsSelect'), cols = $('colsSelect');
+    rows.innerHTML = ''; cols.innerHTML = '';
+    for (let value = 2; value <= 8; value++) rows.add(new Option(String(value), String(value), value === 4, value === 4));
+    for (let value = 2; value <= 10; value++) cols.add(new Option(String(value), String(value), value === 5, value === 5));
   }
 
-  const stacks = Array.from({ length: numBottles }, () => []);
-  let idx = 0;
-  for (let b = 0; b < nColors; b++) {
-    for (let i = 0; i < CAPACITY; i++) {
-      stacks[b].push(units[idx++]);
-    }
+  function colorCount() {
+    const control = $('difficulty');
+    const value = control.value === 'custom' ? $('customColors').value : control.value;
+    return Math.max(2, Math.min(20, Number(value) || 6));
   }
-  // restliche Flaschen bleiben leer
 
-  const alreadySolved = stacks.every(s => s.length === 0 || (s.length === CAPACITY && s.every(v => v === s[0])));
-  if (alreadySolved) return null;
+  function makeSolved(total, count) {
+    const result = [];
+    for (let color = 0; color < count; color++) result.push(Array(CAPACITY).fill(color));
+    while (result.length < total) result.push([]);
+    return result;
+  }
 
-  return stacks;
-}
+  function topRun(bottle) {
+    if (!bottle.length) return 0;
+    const color = bottle[bottle.length - 1];
+    let run = 0;
+    while (run < bottle.length && bottle[bottle.length - 1 - run] === color) run++;
+    return run;
+  }
 
-// Bestimmt Spaltenanzahl fürs Grid-Layout
-function determineCols(totalBottles) {
-  if (customCols > 0) return customCols;
-  const maxPerRow = window.innerWidth < 500 ? 5 : 8;
-  let cols = Math.ceil(Math.sqrt(totalBottles));
-  cols = Math.min(cols, maxPerRow, totalBottles);
-  return Math.max(1, cols);
-}
+  function canPour(from, to) {
+    if (from === to || !bottles[from]?.length || bottles[to]?.length === CAPACITY) return false;
+    const source = bottles[from], target = bottles[to];
+    return !target.length || target[target.length - 1] === source[source.length - 1];
+  }
 
-function updateGridSizing() {
-  const total = bottles.length;
-  const cols = determineCols(total);
-  const rows = customRows > 0 ? customRows : Math.ceil(total / cols);
+  function pour(from, to) {
+    if (!canPour(from, to)) return 0;
+    const source = bottles[from], target = bottles[to];
+    const amount = Math.min(topRun(source), CAPACITY - target.length);
+    for (let i = 0; i < amount; i++) target.push(source.pop());
+    return amount;
+  }
 
-  bottleContainer.style.setProperty('--grid-cols', cols);
-
-  const containerWidth = bottleContainer.clientWidth || (window.innerWidth - 24);
-  const headerFooterHeight = 260;
-  const availableHeight = Math.max(200, window.innerHeight - headerFooterHeight);
-
-  const gap = cols > 8 ? 8 : cols > 5 ? 12 : 16;
-  bottleContainer.style.setProperty('--grid-gap', gap + 'px');
-
-  // Breite aus Spaltenzahl
-  const totalGapWidth = gap * (cols - 1);
-  let bottleW = Math.floor((containerWidth - totalGapWidth) / cols * 0.8);
-
-  // Höhe aus Zeilenzahl
-  const totalGapHeight = gap * (rows - 1);
-  let bottleHFromRows = Math.floor((availableHeight - totalGapHeight) / rows * 0.9);
-
-  // Feste Seitenverhältnis-Berechnung: Höhe = Breite * RATIO
-  let bottleHFromRatio = bottleW * BOTTLE_RATIO;
-
-  // Den limitierenden Faktor nehmen (damit es nie überläuft)
-  let bottleH = Math.min(bottleHFromRows, bottleHFromRatio);
-  bottleW = bottleH / BOTTLE_RATIO;
-
-  // Sinnvolle Grenzen
-  bottleW = Math.max(18, Math.min(70, bottleW));
-  bottleH = bottleW * BOTTLE_RATIO;
-
-  bottleContainer.style.setProperty('--bottle-w', bottleW + 'px');
-  bottleContainer.style.setProperty('--bottle-h', bottleH + 'px');
-  bottleContainer.style.setProperty('--seg-count', CAPACITY);
-}
-
-function renderBottles() {
-  bottleContainer.innerHTML = '';
-  bottles.forEach((stack, i) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'bottle-wrap';
-    wrap.dataset.index = i;
-    if (i === selectedIndex) wrap.classList.add('selected');
-
-    const bottleEl = document.createElement('div');
-    bottleEl.className = 'bottle';
-
-    for (let s = 0; s < CAPACITY; s++) {
-      const seg = document.createElement('div');
-      seg.className = 'segment';
-      if (s < stack.length) {
-        seg.style.background = COLORS[stack[s]];
-      } else {
-        seg.style.background = 'transparent';
+  // Reverse-mixing begins with a solved board and undoes legal pours by
+  // splitting a contiguous top run into another bottle. Reversing those
+  // operations is a legal solution path back to the solved state.
+  function reverseMixSolvedState(total, count) {
+    bottles = makeSolved(total, count);
+    const rounds = Math.max(120, total * count * 16);
+    let lastFrom = -1, lastTo = -1;
+    for (let round = 0; round < rounds; round++) {
+      const candidates = [];
+      for (let from = 0; from < total; from++) {
+        const run = topRun(bottles[from]);
+        if (!run) continue;
+        for (let to = 0; to < total; to++) {
+          const room = CAPACITY - bottles[to].length;
+          // If the run is not the whole bottle, leave one matching unit behind;
+          // otherwise the inverse pour would land on a different color.
+          const reversibleAmount = run === bottles[from].length ? run : run - 1;
+          const maxAmount = Math.min(reversibleAmount, room);
+          if (from !== to && maxAmount > 0 && from !== lastTo && to !== lastFrom) candidates.push([from, to, maxAmount]);
+        }
       }
-      bottleEl.appendChild(seg);
+      if (!candidates.length) break;
+      const [from, to, maxAmount] = candidates[Math.floor(Math.random() * candidates.length)];
+      const amount = 1 + Math.floor(Math.random() * maxAmount);
+      for (let i = 0; i < amount; i++) bottles[to].push(bottles[from].pop());
+      lastFrom = from; lastTo = to;
     }
-
-    wrap.appendChild(bottleEl);
-    wrap.addEventListener('click', () => handleBottleClick(i));
-    bottleContainer.appendChild(wrap);
-  });
-
-  updateGridSizing();
-}
-
-function handleBottleClick(index) {
-  if (isAnimating) return;
-
-  if (selectedIndex === null) {
-    if (bottles[index].length === 0) return;
-    selectedIndex = index;
-    renderBottles();
-    return;
-  }
-
-  if (selectedIndex === index) {
-    selectedIndex = null;
-    renderBottles();
-    return;
-  }
-
-  const fromIdx = selectedIndex;
-  const toIdx = index;
-  selectedIndex = null;
-
-  const info = getPourInfo(fromIdx, toIdx);
-  if (!info.valid) {
-    flashInvalid(toIdx);
-    renderBottles();
-    return;
-  }
-
-  animatePour(fromIdx, toIdx, info, () => {
-    renderBottles();
-    checkWin();
-  });
-}
-
-function flashInvalid(index) {
-  renderBottles();
-  const el = bottleContainer.children[index];
-  if (!el) return;
-  el.classList.add('invalid');
-  setTimeout(() => el.classList.remove('invalid'), 300);
-}
-
-function getPourInfo(fromIdx, toIdx) {
-  const from = bottles[fromIdx];
-  const to = bottles[toIdx];
-
-  if (from.length === 0) return { valid: false };
-  if (to.length >= CAPACITY) return { valid: false };
-
-  const topColor = from[from.length - 1];
-  if (to.length > 0 && to[to.length - 1] !== topColor) return { valid: false };
-
-  let count = 0;
-  for (let i = from.length - 1; i >= 0; i--) {
-    if (from[i] === topColor) count++;
-    else break;
-  }
-
-  const space = CAPACITY - to.length;
-  const amount = Math.min(count, space);
-
-  if (amount <= 0) return { valid: false };
-
-  return { valid: true, amount, color: topColor };
-}
-
-function animatePour(fromIdx, toIdx, info, callback) {
-  isAnimating = true;
-  const fromWrap = bottleContainer.children[fromIdx];
-  const toWrap = bottleContainer.children[toIdx];
-
-  const fromRect = fromWrap.getBoundingClientRect();
-  const toRect = toWrap.getBoundingClientRect();
-
-  const movingRight = fromRect.left < toRect.left;
-  const dx = (toRect.left - fromRect.left) + (movingRight ? 20 : -20);
-  const dy = -Math.max(50, fromRect.height * 0.35);
-
-  fromWrap.classList.add('pouring-from');
-  fromWrap.style.transition = 'transform 0.4s ease';
-  fromWrap.style.transform = `translate(${dx}px, ${dy}px) rotate(${movingRight ? -80 : 80}deg)`;
-
-  const stream = document.createElement('div');
-  stream.className = 'pour-stream';
-  stream.style.background = COLORS[info.color];
-  stream.style.height = Math.max(20, fromRect.height * 0.2) + 'px';
-  stream.style.left = (toRect.left + toRect.width / 2 - 3) + 'px';
-  stream.style.top = (toRect.top - 10) + 'px';
-  document.body.appendChild(stream);
-
-  setTimeout(() => {
-    history.push(JSON.parse(JSON.stringify(bottles)));
-    const from = bottles[fromIdx];
-    const to = bottles[toIdx];
-    for (let i = 0; i < info.amount; i++) {
-      to.push(from.pop());
+    if (bottles.every(bottle => !bottle.length || (bottle.length === CAPACITY && bottle.every(color => color === bottle[0])))) {
+      for (let from = 0; from < total; from++) {
+        if (topRun(bottles[from]) > 1) {
+          const to = bottles.findIndex((bottle, index) => index !== from && bottle.length < CAPACITY);
+          if (to >= 0) { bottles[to].push(bottles[from].pop()); break; }
+        }
+      }
     }
-    moveCount++;
-    moveCounterEl.textContent = `Züge: ${moveCount}`;
-
-    updateSegmentsOnly(fromIdx, toIdx);
-
-    setTimeout(() => {
-      fromWrap.style.transform = '';
-      stream.remove();
-      setTimeout(() => {
-        fromWrap.classList.remove('pouring-from');
-        fromWrap.style.transition = '';
-        isAnimating = false;
-        callback();
-      }, 250);
-    }, 220);
-  }, 380);
-}
-
-function updateSegmentsOnly(fromIdx, toIdx) {
-  [fromIdx, toIdx].forEach(idx => {
-    const wrap = bottleContainer.children[idx];
-    if (!wrap) return;
-    const bottleEl = wrap.querySelector('.bottle');
-    const segs = bottleEl.querySelectorAll('.segment');
-    const stack = bottles[idx];
-    segs.forEach((seg, s) => {
-      seg.style.background = s < stack.length ? COLORS[stack[s]] : 'transparent';
-    });
-  });
-}
-
-function checkWin() {
-  const solved = bottles.every(stack =>
-    stack.length === 0 || (stack.length === CAPACITY && stack.every(v => v === stack[0]))
-  );
-  if (solved) {
-    winStatsEl.textContent = `Level ${level} in ${moveCount} Zügen gelöst!`;
-    winOverlay.classList.remove('hidden');
-    launchConfetti();
   }
-}
 
-function newGame() {
-  bottles = generateLevel(numColors);
-  moveCount = 0;
-  selectedIndex = null;
-  history = [];
-  moveCounterEl.textContent = `Züge: 0`;
-  levelLabelEl.textContent = `Level ${level} (${numColors} Farben, ${bottles.length} Flaschen)`;
-  winOverlay.classList.add('hidden');
-  renderBottles();
-  history = [JSON.parse(JSON.stringify(bottles))];
-}
-
-function resetLevel() {
-  if (history.length > 0) {
-    bottles = JSON.parse(JSON.stringify(history[0]));
+  function generateLevel() {
+    const rows = Number($('rowsSelect').value), cols = Number($('colsSelect').value);
+    const total = rows * cols, count = Math.min(colorCount(), total - 2);
+    reverseMixSolvedState(total, count);
+    history = []; moves = 0; selected = null; level++;
+    $('winOverlay').classList.add('hidden');
+    $('hint').textContent = 'Wähle eine Quellflasche.';
+    render(); updateGridSizing();
   }
-  moveCount = 0;
-  selectedIndex = null;
-  history = [JSON.parse(JSON.stringify(bottles))];
-  moveCounterEl.textContent = `Züge: 0`;
-  renderBottles();
-}
 
-function undoMove() {
-  if (history.length <= 1) return;
-  history.pop();
-  bottles = JSON.parse(JSON.stringify(history[history.length - 1]));
-  moveCount = Math.max(0, moveCount - 1);
-  moveCounterEl.textContent = `Züge: ${moveCount}`;
-  selectedIndex = null;
-  renderBottles();
-}
-
-document.getElementById('newGameBtn').addEventListener('click', () => {
-  level = 1;
-  newGame();
-});
-
-document.getElementById('resetBtn').addEventListener('click', resetLevel);
-document.getElementById('undoBtn').addEventListener('click', undoMove);
-
-document.getElementById('nextLevelBtn').addEventListener('click', () => {
-  level++;
-  newGame();
-});
-
-let resizeTimeout;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(updateGridSizing, 150);
-});
-
-function initGame() {
-  newGame();
-}
-
-initGame();
-
-// ==== Konfetti-Effekt ====
-const canvas = document.getElementById('confettiCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-});
-
-function launchConfetti() {
-  const particles = [];
-  for (let i = 0; i < 150; i++) {
-    particles.push({
-      x: Math.random() * canvas.width,
-      y: -20,
-      r: Math.random() * 6 + 4,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-      speed: Math.random() * 3 + 2,
-      angle: Math.random() * Math.PI * 2,
-      spin: Math.random() * 0.2 - 0.1
+  function render() {
+    const board = $('board');
+    board.innerHTML = '';
+    const total = bottles.length, count = Math.min(colorCount(), total - 2);
+    $('levelLabel').textContent = `Level ${level} (${rowsSelect.value}×${colsSelect.value} = ${total} Flaschen, ${count} Farben)`;
+    $('moveCount').textContent = String(moves);
+    $('puzzleNo').textContent = String(level).padStart(3, '0');
+    $('undo').disabled = history.length === 0;
+    bottles.forEach((bottle, index) => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'bottle' + (index === selected ? ' selected' : '');
+      button.dataset.index = String(index);
+      button.setAttribute('aria-label', `Flasche ${index + 1}, ${bottle.length} von ${CAPACITY} Einheiten`);
+      button.setAttribute('aria-pressed', String(index === selected));
+      bottle.forEach(color => {
+        const layer = document.createElement('span'); layer.className = 'layer';
+        layer.style.backgroundColor = PALETTE[color % PALETTE.length];
+        layer.setAttribute('aria-hidden', 'true'); button.appendChild(layer);
+      });
+      button.addEventListener('click', () => chooseBottle(index));
+      board.appendChild(button);
     });
   }
 
-  let frame = 0;
-  function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      p.y += p.speed;
-      p.angle += p.spin;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.angle);
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.r / 2, -p.r / 2, p.r, p.r);
-      ctx.restore();
-    });
-    frame++;
-    if (frame < 150) {
-      requestAnimationFrame(animate);
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+  function chooseBottle(index) {
+    if (animating) return;
+    if (selected === null) {
+      if (!bottles[index].length) { $('hint').textContent = 'Diese Flasche ist leer.'; return; }
+      selected = index; $('hint').textContent = 'Jetzt eine Zielflasche wählen.'; render(); return;
     }
+    if (index === selected) { selected = null; $('hint').textContent = 'Wähle eine Quellflasche.'; render(); return; }
+    if (!canPour(selected, index)) { $('hint').textContent = 'Dieser Zug ist nicht möglich.'; return; }
+    history.push(bottles.map(bottle => bottle.slice()));
+    const sourceIndex = selected;
+    const sourceElement = document.querySelector(`[data-index="${sourceIndex}"]`);
+    if (sourceElement) sourceElement.classList.add('pouring');
+    animating = true;
+    window.setTimeout(() => {
+      pour(sourceIndex, index); moves++; selected = null; animating = false;
+      render(); updateGridSizing(); $('hint').textContent = 'Wähle eine Quellflasche.';
+      if (isSolved()) showWin();
+    }, 520);
   }
-  animate();
-}
 
-// ==== Service Worker Registrierung ====
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(() => console.log('Service Worker registriert'))
-      .catch(err => console.log('SW Fehler:', err));
-  });
-}
+  function isSolved() {
+    const counts = new Map();
+    for (const bottle of bottles) {
+      if (!bottle.length) continue;
+      if (bottle.length !== CAPACITY || bottle.some(color => color !== bottle[0])) return false;
+      counts.set(bottle[0], (counts.get(bottle[0]) || 0) + 1);
+    }
+    const expected = Math.min(colorCount(), bottles.length - 2);
+    return counts.size === expected && [...counts.values()].every(value => value === 1);
+  }
+
+  function undo() {
+    if (animating || !history.length) return;
+    bottles = history.pop(); moves = Math.max(0, moves - 1); selected = null;
+    $('hint').textContent = 'Zug rückgängig gemacht.'; render(); updateGridSizing();
+  }
+
+  function updateGridSizing() {
+    const rows = Number($('rowsSelect').value), cols = Number($('colsSelect').value), board = $('board');
+    const gap = Math.min(30, Math.max(10, window.innerWidth * 0.022));
+    const availableWidth = Math.max(44, (board.clientWidth - (cols - 1) * gap) / cols);
+    const availableHeight = Math.max(80, (board.clientHeight - (rows - 1) * gap) / rows / 2.6);
+    const width = Math.max(34, Math.min(availableWidth, availableHeight));
+    document.documentElement.style.setProperty('--cols', String(cols));
+    document.documentElement.style.setProperty('--bottle-w', `${width}px`);
+    document.documentElement.style.setProperty('--bottle-h', `${width * 2.6}px`);
+  }
+
+  function showWin() {
+    $('winText').textContent = `${moves} Züge · Level ${level}`;
+    $('winOverlay').classList.remove('hidden'); startConfetti();
+  }
+
+  function startConfetti() {
+    const canvas = $('confetti'), context = canvas.getContext('2d');
+    if (!context) return;
+    cancelAnimationFrame(confettiFrame);
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * ratio; canvas.height = window.innerHeight * ratio;
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    const pieces = Array.from({ length: 120 }, () => ({
+      x: window.innerWidth / 2 + (Math.random() - .5) * 180, y: window.innerHeight * .34,
+      vx: (Math.random() - .5) * 8, vy: -Math.random() * 9 - 3,
+      color: PALETTE[Math.floor(Math.random() * PALETTE.length)], size: Math.random() * 5 + 2, angle: Math.random() * 6
+    }));
+    let frame = 0;
+    const draw = () => {
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      pieces.forEach(piece => { piece.x += piece.vx; piece.vy += .25; piece.y += piece.vy; piece.angle += .12; context.save(); context.translate(piece.x, piece.y); context.rotate(piece.angle); context.fillStyle = piece.color; context.fillRect(0, 0, piece.size, piece.size * 1.8); context.restore(); });
+      if (frame++ < 220 && !$('winOverlay').classList.contains('hidden')) confettiFrame = requestAnimationFrame(draw);
+    };
+    draw();
+  }
+
+  function bindEvents() {
+    $('difficulty').addEventListener('change', () => { $('customWrap').classList.toggle('hidden', $('difficulty').value !== 'custom'); generateLevel(); });
+    $('customColors').addEventListener('change', generateLevel);
+    $('rowsSelect').addEventListener('change', generateLevel);
+    $('colsSelect').addEventListener('change', generateLevel);
+    $('newGame').addEventListener('click', generateLevel);
+    $('playAgain').addEventListener('click', generateLevel);
+    $('undo').addEventListener('click', undo);
+    window.addEventListener('resize', updateGridSizing);
+  }
+
+  fillSelects(); bindEvents(); generateLevel();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+})();
