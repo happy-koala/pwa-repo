@@ -3,7 +3,7 @@ const apps = [
     name: "Solitär",
     folder: "solitaire",
     icon: "icon-192.png"
-  }
+  },
    {
      name: "Flaschen sortieren",
      folder: "bottle-sort",
