@@ -2,33 +2,25 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#10251f">
-  <meta name="description" content="Bottle Sort – ein farbenfrohes Sortierspiel">
-  <link rel="manifest" href="./manifest.json">
-  <link rel="stylesheet" href="./style.css">
-  <title>Bottle Sort</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flaschen sortieren</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-shell">
+  <main class="app-shell">
     <header class="topbar">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">◒</span><div><strong>BOTTLE SORT</strong><small>FOCUS • FLOW • FINISH</small></div></div>
-      <div class="stats" aria-live="polite"><span id="levelLabel">Level 1</span><span class="moves"><b id="moveCount">0</b> Züge</span></div>
+      <div><p class="eyebrow">WATER SORT PUZZLE</p><h1>Flaschen sortieren</h1></div>
+      <div class="moves" aria-live="polite"><span>Züge</span><strong id="move-count">0</strong></div>
     </header>
-    <main>
-      <section class="hero"><p class="eyebrow">LIQUID LOGIC</p><h1>Finde den<br><em>klaren Fluss.</em></h1><p class="intro">Sortiere jede Farbe in eine eigene Flasche. Oben anklicken, dann ins Ziel gießen.</p></section>
-      <section class="controls" aria-label="Spieleinstellungen">
-        <label>Schwierigkeit<select id="difficulty"><option value="4">Einfach · 4 Farben</option><option value="6" selected>Mittel · 6 Farben</option><option value="8">Schwer · 8 Farben</option><option value="12">Extrem · 12 Farben</option><option value="custom">Benutzerdefiniert</option></select></label>
-        <label id="customWrap" class="hidden">Farben<input id="customColors" type="number" min="2" max="20" value="6"></label>
-        <label>Zeilen<select id="rowsSelect"></select></label><label>Spalten<select id="colsSelect"></select></label>
-        <button id="newGame" class="primary" type="button">Neues Spiel <span aria-hidden="true">↗</span></button><button id="undo" class="secondary" type="button" disabled>↶ Undo</button>
-      </section>
-      <p id="hint" class="hint" aria-live="polite">Wähle eine Quellflasche.</p>
-      <section id="board" class="board" aria-label="Spielfeld"></section>
-    </main>
-    <footer><span>© BOTTLE SORT</span><span>PUZZLE NO. <b id="puzzleNo">001</b></span></footer>
-  </div>
-  <div id="winOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="winHeading"><canvas id="confetti" aria-hidden="true"></canvas><div class="win-card"><span class="win-kicker">PERFEKT SORTIERT</span><h2 id="winHeading">Schöner<br><em>Flow.</em></h2><p id="winText"></p><button id="playAgain" class="primary" type="button">Neue Runde ↗</button></div></div>
-  <script src="./app.js" defer></script>
+    <section class="controls" aria-label="Spieloptionen">
+      <label>Zeilen<select id="rows"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>Spalten<select id="columns"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>Farben<select id="colors"><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
+      <button class="button primary" id="new-game" type="button">Neues Spiel</button>
+    </section>
+    <section class="game-card"><div class="board" id="board" role="grid"></div><div class="game-footer"><p>Tippe eine Flasche an, dann das Ziel.</p><button class="button secondary" id="undo" type="button">Rückgängig</button></div></section>
+  </main>
+  <div class="overlay" id="win-overlay" hidden><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="win-title"><p class="eyebrow">PUZZLE GELÖST</p><h2 id="win-title">Gewonnen!</h2><p id="win-moves"></p><button class="button primary" id="win-new" type="button">Neues Spiel</button></div></div>
+  <script src="app.js"></script>
 </body>
 </html>
