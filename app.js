@@ -8,6 +8,11 @@ const apps = [
      name: "Flaschen sortieren",
      folder: "bottle-sort"
   //   icon: "icon-192.png"
+  },
+   {
+     name: "Kennezichnen",
+     folder: "plate-collector"
+  //   icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
