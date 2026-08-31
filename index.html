@@ -1,22 +1,158 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meine Apps</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#242321">
+  <meta name="description" content="Kennzeichen Sammler — deine mobile Sammlung deutscher Kennzeichen.">
+  <title>Kennzeichen Sammler</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="#erfassen" aria-label="Kennzeichen Sammler, Erfassen öffnen">
+        <span class="brand-mark" aria-hidden="true">K</span>
+        <span class="brand-name">Kennzeichen<br>Sammler</span>
+      </a>
+      <div class="header-status" aria-label="Status deiner Sammlung">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>offline bereit</span>
+      </div>
+    </header>
 
-  <header>
-    <h1>Meine Apps</h1>
-    <p>Wähle eine App aus</p>
-  </header>
+    <nav class="primary-nav" aria-label="Hauptnavigation">
+      <button class="nav-tab" type="button" data-view="sammlung" aria-controls="view-sammlung" aria-selected="false">
+        <span class="tab-number">01</span> Sammlung
+      </button>
+      <button class="nav-tab is-active" type="button" data-view="erfassen" aria-controls="view-erfassen" aria-selected="true">
+        <span class="tab-number">02</span> Erfassen
+      </button>
+    </nav>
 
-  <main class="app-grid" id="app-grid">
-    <!-- Kacheln werden per app.js eingefügt -->
-  </main>
+    <main>
+      <section id="view-erfassen" class="view is-visible" aria-labelledby="erfassen-title">
+        <div class="capture-layout">
+          <div class="view-intro reveal reveal-one">
+            <p class="eyebrow" id="erfassen-title">Neuer Fund</p>
+          </div>
+          <div class="capture-mount" data-capture-mount></div>
+        </div>
+      </section>
 
-  <script src="app.js"></script>
+      <section id="view-sammlung" class="view" aria-labelledby="sammlung-title" hidden>
+        <div class="view-intro reveal reveal-one">
+          <p class="eyebrow">Dein Fuhrpark</p>
+          <h1 id="sammlung-title">Sammlung<span class="accent">.</span></h1>
+          <p class="intro-copy">Alle gesehenen Kennzeichen. Ein persönlicher Atlas deiner Straßen.</p>
+        </div>
+
+        <div class="collection-summary reveal reveal-two">
+          <div><span class="summary-label">Gesammelt</span><strong class="summary-number">00</strong></div>
+          <div class="summary-rule" aria-hidden="true"></div>
+          <div class="summary-note">Noch keine Einträge.<br>Die Straße wartet.</div>
+        </div>
+
+        <nav class="collection-subnav" aria-label="Sammlungsansicht">
+          <button class="subnav-button is-active" type="button" data-collection-view="alle" aria-selected="true">Alle</button>
+          <button class="subnav-button" type="button" data-collection-view="sammlungen" aria-selected="false">Sammlungen</button>
+        </nav>
+
+        <div class="collection-tools" aria-label="Sammlung verwalten">
+          <button class="collection-tool-button" type="button" data-open-export>Sammlung exportieren</button>
+          <button class="collection-tool-button" type="button" data-open-import>Sammlung importieren</button>
+        </div>
+
+        <div class="collection-panel" data-collection-panel="alle"></div>
+        <div class="collection-panel" data-collection-panel="sammlungen" hidden></div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>KS / 2026</span></footer>
+  </div>
+
+  <dialog class="collection-dialog" data-export-dialog aria-labelledby="export-dialog-title">
+    <form method="dialog" class="collection-dialog__content">
+      <h2 id="export-dialog-title">Sammlung exportieren</h2>
+      <textarea data-export-text readonly aria-label="Exportdaten"></textarea>
+      <p class="collection-dialog__message" data-export-message role="status"></p>
+      <div class="collection-dialog__actions">
+        <button class="collection-tool-button" type="button" data-copy-export>Kopieren</button>
+        <button class="collection-tool-button collection-tool-button--quiet" type="button" data-close-dialog>Schließen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="collection-dialog" data-import-dialog aria-labelledby="import-dialog-title">
+    <form method="dialog" class="collection-dialog__content">
+      <h2 id="import-dialog-title">Sammlung importieren</h2>
+      <textarea data-import-text aria-label="Importdaten" placeholder="Exportdaten hier einfügen"></textarea>
+      <p class="collection-dialog__message" data-import-message role="status"></p>
+      <div class="collection-dialog__actions">
+        <button class="collection-tool-button" type="button" data-confirm-import>Bestätigen</button>
+        <button class="collection-tool-button collection-tool-button--quiet" type="button" data-close-dialog>Schließen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./app.js"></script>
+  <script>
+    (() => {
+      const exportDialog = document.querySelector('[data-export-dialog]');
+      const importDialog = document.querySelector('[data-import-dialog]');
+      const exportText = exportDialog.querySelector('[data-export-text]');
+      const importText = importDialog.querySelector('[data-import-text]');
+      const exportMessage = exportDialog.querySelector('[data-export-message]');
+      const importMessage = importDialog.querySelector('[data-import-message]');
+
+      const closeDialog = (dialog) => dialog.close();
+
+      document.querySelector('[data-open-export]').addEventListener('click', () => {
+        exportMessage.textContent = '';
+        try {
+          const collection = window.KennzeichenSammler.exportCollection();
+          exportText.value = typeof collection === 'string'
+            ? collection
+            : JSON.stringify(collection, null, 2);
+          exportDialog.showModal();
+        } catch (error) {
+          exportText.value = '';
+          exportMessage.textContent = `Export fehlgeschlagen: ${error.message || 'Unbekannter Fehler'}`;
+          exportDialog.showModal();
+        }
+      });
+
+      document.querySelector('[data-open-import]').addEventListener('click', () => {
+        importMessage.textContent = '';
+        importText.value = '';
+        importDialog.showModal();
+        importText.focus();
+      });
+
+      exportDialog.querySelector('[data-copy-export]').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(exportText.value);
+          exportMessage.textContent = 'Export in die Zwischenablage kopiert.';
+        } catch (error) {
+          exportMessage.textContent = `Kopieren fehlgeschlagen: ${error.message || 'Unbekannter Fehler'}`;
+        }
+      });
+
+      exportDialog.querySelector('[data-close-dialog]').addEventListener('click', () => closeDialog(exportDialog));
+      importDialog.querySelector('[data-close-dialog]').addEventListener('click', () => closeDialog(importDialog));
+
+      importDialog.querySelector('[data-confirm-import]').addEventListener('click', async () => {
+        importMessage.textContent = '';
+        try {
+          await window.KennzeichenSammler.importCollection(importText.value);
+          importMessage.textContent = 'Sammlung erfolgreich importiert.';
+        } catch (error) {
+          importMessage.textContent = `Import fehlgeschlagen: ${error.message || 'Unbekannter Fehler'}`;
+        }
+      });
+    })();
+  </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925" integrity="sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW7mHomMj4MLRlCsJDTqXzWLHJFFlPCEIj/A==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5"}' crossorigin="anonymous"></script>
 </body>
 </html>
