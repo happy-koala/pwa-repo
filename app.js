@@ -12,7 +12,7 @@ const apps = [
    {
      name: "Kennezichnen",
      folder: "plate-collector"
-  //   icon: "icon-192.png"
+     icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
