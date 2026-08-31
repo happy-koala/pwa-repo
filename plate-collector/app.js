@@ -64,7 +64,9 @@ function updateSummary() {
   }
 
   if (elements.summaryNote) {
-    elements.summaryNote.innerHTML = `<strong>${collectedCount} / ${total}</strong> gesammelt`;
+    elements.summaryNote.innerHTML = collectedCount > 0
+      ? `<strong>${collectedCount} / ${total}</strong> gesammelt`
+      : '';
   }
 }
 
@@ -255,9 +257,7 @@ function renderAllCollection() {
     empty.className = 'empty-state';
 
     empty.innerHTML = `
-      <div class="plate-ghost" aria-hidden="true"><span>D–</span><b>?</b></div>
-      <h2>Deine Sammlung ist leer</h2>
-      <p>Erfasse dein erstes Kennzeichen, sobald du unterwegs bist.</p>
+      <h2>Deine Sammlung ist leer.</h2>
       <button class="action-button" type="button" data-view="erfassen">
         + Kennzeichen erfassen
       </button>`;
@@ -433,9 +433,9 @@ function init() {
   renderCollectionOverview();
 
   const initialView =
-    window.location.hash === '#sammlung'
-      ? 'sammlung'
-      : 'erfassen';
+    window.location.hash === '#erfassen'
+      ? 'erfassen'
+      : 'sammlung';
 
   showView(initialView);
   showCollectionView('alle');
