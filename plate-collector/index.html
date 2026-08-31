@@ -13,13 +13,17 @@
   <div class="app-shell">
     <header class="site-header">
       <a class="brand" href="#erfassen" aria-label="Kennzeichen Sammler, Erfassen öffnen">
-        <span class="brand-mark" aria-hidden="true">K</span>
+        <img src="icon-192.png" alt="Kennzeichen Sammler Icon" class="brand-icon">
         <span class="brand-name">Kennzeichen<br>Sammler</span>
       </a>
-      <div class="header-status" aria-label="Status deiner Sammlung">
-        <span class="status-dot" aria-hidden="true"></span>
-        <span>offline bereit</span>
-      </div>
+      <button class="settings-button" type="button" data-open-settings aria-label="Einstellungen öffnen" title="Einstellungen">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
+          <circle cx="12" cy="12" r="2"/>
+          <circle cx="12" cy="5" r="2"/>
+          <circle cx="12" cy="19" r="2"/>
+          <path d="M12 9v6m0-10V3m0 18v6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
     </header>
 
     <nav class="primary-nav" aria-label="Hauptnavigation">
@@ -59,11 +63,6 @@
           <button class="subnav-button" type="button" data-collection-view="sammlungen" aria-selected="false">Sammlungen</button>
         </nav>
 
-        <div class="collection-tools" aria-label="Sammlung verwalten">
-          <button class="collection-tool-button" type="button" data-open-export>Sammlung exportieren</button>
-          <button class="collection-tool-button" type="button" data-open-import>Sammlung importieren</button>
-        </div>
-
         <div class="collection-panel" data-collection-panel="alle"></div>
         <div class="collection-panel" data-collection-panel="sammlungen" hidden></div>
       </section>
@@ -71,6 +70,22 @@
 
     <footer class="site-footer"><span>KS / 2026</span></footer>
   </div>
+
+  <dialog class="collection-dialog" data-settings-dialog aria-labelledby="settings-dialog-title">
+    <form method="dialog" class="collection-dialog__content">
+      <h2 id="settings-dialog-title">Einstellungen</h2>
+      <div class="settings-section">
+        <h3>Sammlung</h3>
+        <div class="collection-dialog__actions">
+          <button class="collection-tool-button" type="button" data-open-export-from-settings>Exportieren</button>
+          <button class="collection-tool-button collection-tool-button--quiet" type="button" data-open-import-from-settings>Importieren</button>
+        </div>
+      </div>
+      <div class="collection-dialog__actions" style="margin-top: 1rem;">
+        <button class="collection-tool-button collection-tool-button--quiet" type="button" data-close-dialog>Schließen</button>
+      </div>
+    </form>
+  </dialog>
 
   <dialog class="collection-dialog" data-export-dialog aria-labelledby="export-dialog-title">
     <form method="dialog" class="collection-dialog__content">
@@ -99,6 +114,7 @@
   <script type="module" src="./app.js"></script>
   <script>
     (() => {
+      const settingsDialog = document.querySelector('[data-settings-dialog]');
       const exportDialog = document.querySelector('[data-export-dialog]');
       const importDialog = document.querySelector('[data-import-dialog]');
       const exportText = exportDialog.querySelector('[data-export-text]');
@@ -108,13 +124,18 @@
 
       const closeDialog = (dialog) => dialog.close();
 
-      document.querySelector('[data-open-export]').addEventListener('click', () => {
+      document.querySelector('[data-open-settings]').addEventListener('click', () => {
+        settingsDialog.showModal();
+      });
+
+      document.querySelector('[data-open-export-from-settings]').addEventListener('click', () => {
         exportMessage.textContent = '';
         try {
           const collection = window.KennzeichenSammler.exportCollection();
           exportText.value = typeof collection === 'string'
             ? collection
             : JSON.stringify(collection, null, 2);
+          settingsDialog.close();
           exportDialog.showModal();
         } catch (error) {
           exportText.value = '';
@@ -123,9 +144,10 @@
         }
       });
 
-      document.querySelector('[data-open-import]').addEventListener('click', () => {
+      document.querySelector('[data-open-import-from-settings]').addEventListener('click', () => {
         importMessage.textContent = '';
         importText.value = '';
+        settingsDialog.close();
         importDialog.showModal();
         importText.focus();
       });
@@ -139,20 +161,25 @@
         }
       });
 
-      exportDialog.querySelector('[data-close-dialog]').addEventListener('click', () => closeDialog(exportDialog));
-      importDialog.querySelector('[data-close-dialog]').addEventListener('click', () => closeDialog(importDialog));
+      document.querySelectorAll('[data-close-dialog]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const dialog = e.target.closest('dialog');
+          if (dialog) closeDialog(dialog);
+        });
+      });
 
       importDialog.querySelector('[data-confirm-import]').addEventListener('click', async () => {
         importMessage.textContent = '';
         try {
           await window.KennzeichenSammler.importCollection(importText.value);
           importMessage.textContent = 'Sammlung erfolgreich importiert.';
+          setTimeout(() => importDialog.close(), 800);
         } catch (error) {
           importMessage.textContent = `Import fehlgeschlagen: ${error.message || 'Unbekannter Fehler'}`;
         }
       });
     })();
   </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925" integrity="sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW7mHomMj4MLRlCsJDTqXzWLHJFFlPCEIj/A==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5"}' crossorigin="anonymous"></script>
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v3d52b47920f24c319d37e2661827c42b1787588026925" integrity="sha512-d9sL6GJLXn6fInD1+TVXhTcQOsmxeHfmHAvwGDIxp5TO+uo1fiWW7mHomMj4MLRlCsJDTqXzWLHJFFlPCEIj/A==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5"}' crossorigin="anonymous"></script>
 </body>
 </html>

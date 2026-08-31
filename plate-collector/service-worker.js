@@ -1,19 +1,19 @@
-const CACHE_NAME = 'kennzeichen-sammler-v1';
+const CACHE_NAME = 'kennzeichen-sammler-v0.2';
 const APP_SHELL = [
   './index.html',
-  './style.css',
-  './app.js',
-  './plates-data.js',
+  './css/style.css',
+  './js/app.js',
+  './js/plates-data.js',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => Promise.all(APP_SHELL.map((asset) => cache.add(asset).catch((error) => {
-        // Optional icon assets may be absent during an incremental deployment.
+        // Platzhalter-Icons dürfen bis zum Nachreichen der PNGs fehlen.
         console.warn(`App-Shell-Asset nicht gecacht: ${asset}`, error);
       }))))
       .then(() => self.skipWaiting())
