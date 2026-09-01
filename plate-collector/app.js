@@ -68,6 +68,27 @@ function updateSummary() {
   }
 }
 
+/**
+ * Erzeugt das gemeinsame Markup für eine Kennzeichen-Karte
+ * (Schild-Optik links, Name + Bundesland-Kürzel rechts).
+ */
+function buildPlateCardMarkup() {
+  return `
+    <span class="plate-shield" aria-hidden="true">
+      <span class="plate-shield__code"></span>
+    </span>
+    <span class="plate-info">
+      <span class="plate-info__name"></span>
+      <span class="plate-info__region"></span>
+    </span>`;
+}
+
+function fillPlateCard(node, plate) {
+  node.querySelector('.plate-shield__code').textContent = plate.code;
+  node.querySelector('.plate-info__name').textContent = plate.name;
+  node.querySelector('.plate-info__region').textContent = plate.region;
+}
+
 function createCaptureInterface() {
   if (!elements.captureMount || elements.captureMount.querySelector('[data-app-capture]')) return;
 
@@ -82,7 +103,7 @@ function createCaptureInterface() {
       <p id="plate-search-help" class="muted">Suche nach Kennzeichen oder Namen.</p>
     </div>
     <p class="muted results-count" data-results-count role="status" aria-live="polite" hidden></p>
-    <div class="collection-grid plate-results" data-plate-list hidden></div>`;
+    <div class="plate-results" data-plate-list hidden></div>`;
 
   elements.captureMount.append(wrapper);
 
@@ -140,18 +161,11 @@ function renderPlateList(query = '') {
     const button = document.createElement('button');
 
     button.type = 'button';
-    button.className = `card plate-choice${isCollected ? ' is-collected' : ''}`;
+    button.className = `plate-card plate-choice${isCollected ? ' is-collected' : ''}`;
     button.setAttribute('aria-pressed', String(isCollected));
+    button.innerHTML = buildPlateCardMarkup() + '<span class="plate-choice__state" aria-hidden="true"></span>';
 
-    button.innerHTML = `
-      <strong class="plate-choice__code"></strong>
-      <span class="plate-choice__name"></span>
-      <span class="badge plate-choice__region"></span>
-      <span class="plate-choice__state" aria-hidden="true"></span>`;
-
-    button.querySelector('.plate-choice__code').textContent = plate.code;
-    button.querySelector('.plate-choice__name').textContent = plate.name;
-    button.querySelector('.plate-choice__region').textContent = regionName(plate.region);
+    fillPlateCard(button, plate);
     button.querySelector('.plate-choice__state').textContent = isCollected ? '✓' : '+';
 
     button.addEventListener('click', () => togglePlate(plate.code));
@@ -232,8 +246,7 @@ function renderCollectionOverview() {
     item.innerHTML = '<strong></strong><span class="muted"></span>';
 
     item.querySelector('strong').textContent = regionName(key);
-    item.querySelector('span').textContent =
-      `${group.collected} / ${group.total}`;
+    item.querySelector('span').textContent = `${group.collected} / ${group.total}`;
 
     list.append(item);
   });
@@ -253,11 +266,9 @@ function renderAllCollection() {
   if (collection.size === 0) {
     const empty = document.createElement('div');
     empty.className = 'empty-state';
-
     empty.innerHTML = `
-      <div class="plate-ghost" aria-hidden="true"><span>D–</span><b>?</b></div>
+      <div class="plate-ghost" aria-hidden="true"><span>? – </span><b>123</b></div>
       <h2>Deine Sammlung ist leer</h2>
-      <p>Erfasse dein erstes Kennzeichen, sobald du unterwegs bist.</p>
       <button class="action-button" type="button" data-view="erfassen">
         + Kennzeichen erfassen
       </button>`;
@@ -280,20 +291,15 @@ function renderAllCollection() {
   panel.append(note);
 
   const list = document.createElement('div');
-  list.className = 'collection-grid collected-list';
+  list.className = 'plate-results collected-list';
 
   PLATE_CODES
     .filter((plate) => collection.has(plate.code))
     .forEach((plate) => {
       const item = document.createElement('div');
-      item.className = 'card region-progress';
-
-      item.innerHTML = '<strong></strong><span class="muted"></span>';
-
-      item.querySelector('strong').textContent = plate.code;
-      item.querySelector('span').textContent =
-        `${plate.name} · ${regionName(plate.region)}`;
-
+      item.className = 'plate-card';
+      item.innerHTML = buildPlateCardMarkup();
+      fillPlateCard(item, plate);
       list.append(item);
     });
 

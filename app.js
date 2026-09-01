@@ -10,7 +10,7 @@ const apps = [
   //   icon: "icon-192.png"
   },
    {
-     name: "Kennezichnen",
+     name: "Kennzeichen",
      folder: "plate-collector",
      icon: "icon-192.png"
   }

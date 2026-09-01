@@ -1,3 +1,9 @@
 # macOS
 .DS_Store
 **/.DS_Store
+
+# plate-collector
+plate-collector/README.md
+plate-collector/kennzeichen.txt
+
+casual-runner/
