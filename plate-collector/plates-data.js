@@ -13,7 +13,7 @@ export const REGIONS = {
 
 export const PLATE_CODES = [
   {"code": "A", "name": "Augsburg", "region": "BY", "country": "DE"},
-  {"code": "AA", "name": "Ostalbkreis (Aalen>", "region": "BW", "country": "DE"},
+  {"code": "AA", "name": "Ostalbkreis (Aalen)", "region": "BW", "country": "DE"},
   {"code": "AB", "name": "Aschaffenburg", "region": "BY", "country": "DE"},
   {"code": "ABG", "name": "Altenburger Land", "region": "TH", "country": "DE"},
   {"code": "ABI", "name": "Anhalt-Bitterfeld", "region": "ST", "country": "DE"},
@@ -359,11 +359,12 @@ export const PLATE_CODES = [
   {"code": "KS", "name": "Kassel", "region": "HE", "country": "DE"},
   {"code": "KT", "name": "Kitzingen", "region": "BY", "country": "DE"},
   {"code": "KU", "name": "Kulmbach", "region": "BY", "country": "DE"},
-  {"code": "KÜN", "name": "Hohenlohekreis", "region": "BW", "country": "DE"},
+  {"code": "KÜN", "name": "Hohenlohekreis (Künzelsau)", "region": "BW", "country": "DE"},
   {"code": "KUS", "name": "Kusel", "region": "RP", "country": "DE"},
   {"code": "KW", "name": "Königs Wusterhausen", "region": "BB", "country": "DE"},
   {"code": "KY", "name": "Kyritz", "region": "BB", "country": "DE"},
   {"code": "KYF", "name": "Kyffhäuserkreis", "region": "TH", "country": "DE"},
+  {"code": "L", "name": "Lahn-Dill-Kreis", "region": "HE", "country": "DE", "isDeprecated": true, "currentCode": "LDK, GI"},
   {"code": "L", "name": "Leipzig", "region": "SN", "country": "DE"},
   {"code": "LA", "name": "Landshut", "region": "BY", "country": "DE"},
   {"code": "LAN", "name": "Dingolfing-Landau", "region": "BY", "country": "DE"},
