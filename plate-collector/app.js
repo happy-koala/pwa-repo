@@ -78,14 +78,14 @@ function buildPlateCardMarkup() {
       <span class="plate-shield__code"></span>
     </span>
     <span class="plate-info">
-      <span class="plate-info__name"></span>
-      <span class="plate-info__region"></span>
+      <span class="plate-info__name"></span><span class="plate-info__region"></span>
     </span>`;
 }
 
 function fillPlateCard(node, plate) {
   node.querySelector('.plate-shield__code').textContent = plate.code;
-  node.querySelector('.plate-info__name').textContent = plate.name;
+  node.querySelector('.plate-info__name').textContent =
+    `${plate.name}${plate.isDeprecated ? ` | aktuell: ${plate.currentCode}` : ''}`;
   node.querySelector('.plate-info__region').textContent = plate.region;
 }
 

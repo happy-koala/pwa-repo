@@ -180,7 +180,7 @@ export const PLATE_CODES = [
   {"code": "ERZ", "name": "Erzgebirgskreis", "region": "SN", "country": "DE"},
   {"code": "ES", "name": "Esslingen", "region": "BW", "country": "DE"},
   {"code": "ESB", "name": "Eschenbach in der Oberpfalz", "region": "BY", "country": "DE"},
-  {"code": "ESA", "name": "Eisenach", "region": "TH", "country": "DE", "isDeprecated": true, "currentCode": "WAK"},
+  {"code": "ESA", "name": "Landkreis Eisenach", "region": "TH", "country": "DE", "isDeprecated": true, "currentCode": "WAK"},
   {"code": "ESW", "name": "Werra-Meißner-Kreis (Eschwege)", "region": "HE", "country": "DE"},
   {"code": "EU", "name": "Euskirchen", "region": "NRW", "country": "DE"},
   {"code": "EUT", "name": "Eutin", "region": "SH", "country": "DE", "isDeprecated": true, "currentCode": "OH"},

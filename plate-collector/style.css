@@ -385,6 +385,8 @@ main {
   width: 100%;
   padding: .6rem .8rem;
   color: var(--text);
+  background: var(--bg);
+  border-radius: 8px;
   text-align: left;
 }
 
