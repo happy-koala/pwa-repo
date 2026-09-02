@@ -78,15 +78,33 @@ function buildPlateCardMarkup() {
       <span class="plate-shield__code"></span>
     </span>
     <span class="plate-info">
-      <span class="plate-info__name"></span><span class="plate-info__region"></span>
-    </span>`;
+      <span class="plate-info__name"></span>
+      <span class="plate-info__current" hidden>
+         | aktuell:
+        <span class="plate-shield plate-shield--small" aria-hidden="true">
+          <span class="plate-shield__code"></span>
+        </span>
+      </span>
+    </span>
+    <span class="plate-info__region"></span>`;
 }
 
 function fillPlateCard(node, plate) {
   node.querySelector('.plate-shield__code').textContent = plate.code;
-  node.querySelector('.plate-info__name').textContent =
-    `${plate.name}${plate.isDeprecated ? ` | aktuell: ${plate.currentCode}` : ''}`;
+  node.querySelector('.plate-info__name').textContent = plate.name;
   node.querySelector('.plate-info__region').textContent = plate.region;
+
+  const currentWrap = node.querySelector('.plate-info__current');
+
+  if (plate.isDeprecated && plate.currentCode) {
+    currentWrap.hidden = false;
+    currentWrap.querySelector('.plate-shield--small .plate-shield__code').textContent = plate.currentCode;
+  } else {
+    currentWrap.hidden = true;
+  }
+
+  const shield = node.querySelector('.plate-shield:not(.plate-shield--small)');
+  shield.classList.toggle('plate-shield--deprecated', Boolean(plate.isDeprecated));
 }
 
 function createCaptureInterface() {

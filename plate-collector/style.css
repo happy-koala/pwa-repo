@@ -420,15 +420,30 @@ main {
   white-space: nowrap;
 }
 
+.plate-shield--deprecated {
+  background: rgb(247 230 90 / 75%);
+}
+
+.plate-shield--small {
+  display: inline;
+  min-width: 3.2rem;
+  height: 1.6rem;
+  padding: .2rem .8rem;
+}
+
+.plate-shield--small .plate-shield__code {
+  font-size: .9rem;
+}
+
 .plate-info {
-  display: flex;
+  display: inline;
   flex: 1;
   flex-direction: column;
   gap: .15rem;
   min-width: 0;
 }
 
-.plate-info__name {
+.plate-info__name, .plate-info__current {
   overflow: hidden;
   color: var(--text);
   font-size: .88rem;
