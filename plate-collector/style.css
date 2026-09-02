@@ -25,7 +25,7 @@
   --radius-md: .8rem;
   --radius-lg: 1.15rem;
   --shadow: 0 .75rem 2rem rgb(0 0 0 / 24%);
-  --content-width: 70rem;
+  --content-width: 60rem;
   --tap-target: 2.75rem;
 }
 
@@ -46,7 +46,7 @@ body {
   min-height: 100dvh;
   margin: 0;
   background:
-    radial-gradient(circle at 100% 0%, rgb(247 210 30 / 7%), transparent 25rem),
+    radial-gradient(circle at 90% 0%, rgb(247 210 30 / 7%), transparent 25rem),
     linear-gradient(145deg, var(--bg), var(--bg-deep));
   color: var(--text);
   font: 1rem/1.5 system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -109,7 +109,7 @@ h2 {
 }
 
 .view-title {
-  margin: 0 0 .5rem;
+  margin: -20px 0 20px;
   color: var(--text);
   font-family: var(--font-plate);
   font-size: clamp(2rem, 8vw, 3rem);
