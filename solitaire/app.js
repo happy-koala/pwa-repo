@@ -12,7 +12,7 @@
   // 0   = Heuristik komplett deaktiviert (reines Zufalls-Shuffle)
   // 1   = maximale Heuristik-Stärke (so viele kritische Karten wie möglich werden begünstigt)
   // Werte dazwischen skalieren die Intensität kontinuierlich.
-  const HEURISTIC_STRENGTH = 0.6;
+  const HEURISTIC_STRENGTH = 0.8;
 
   // ================== LÖSBARKEITS-HEURISTIK MIT ABGESTUFTEN RÄNGEN ==================
   // Für Ränge 1-7 eine eigene Basis-Wahrscheinlichkeit und Ziel-Tiefe.
