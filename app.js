@@ -5,19 +5,19 @@ const apps = [
     icon: "icon-192.png"
   },
    {
-     name: "Flaschen sortieren",
-     folder: "bottle-sort"
-  //   icon: "icon-192.png"
-  },
-   {
-     name: "Kennzeichen",
+     name: "Kennzeichen sammeln",
      folder: "plate-collector",
      icon: "icon-192.png"
+  },
+   {
+     name: "Flaschen sortieren (WIP)",
+     folder: "bottle-sort"
+  //   icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
-  //   name: "Nächstes Spiel",
-  //   folder: "naechstes-spiel",
+  //   name: "Name (Anzeige)",
+  //   folder: "app-folder",
   //   icon: "icon-192.png"
   // }
 ];
