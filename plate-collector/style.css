@@ -220,7 +220,7 @@ main {
 .capture-mount {
   width: 100%;
   max-width: 34rem;
-  margin: 0 auto;
+  margin: 20px auto;
 }
 
 .card,
