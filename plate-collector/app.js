@@ -79,7 +79,7 @@ function buildPlateCardMarkup() {
     </span>
     <span class="plate-info">
       <span class="plate-info__name"></span>
-      <span class="plate-info__current" hidden>
+      <span class="plate-info__current accent" hidden>
          | aktuell:
         <span class="plate-shield plate-shield--small" aria-hidden="true">
           <span class="plate-shield__code"></span>

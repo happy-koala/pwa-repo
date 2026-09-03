@@ -216,10 +216,6 @@ main {
   color: var(--muted);
 }
 
-.accent {
-  color: var(--yellow);
-}
-
 .capture-mount {
   width: 100%;
   max-width: 34rem;
@@ -421,7 +417,7 @@ main {
 }
 
 .plate-shield--deprecated {
-  background: rgb(247 230 90 / 75%);
+  background: rgb(247 210 90 / 80%);
 }
 
 .plate-shield--small {
@@ -450,6 +446,10 @@ main {
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.accent {
+  color: var(--yellow);
 }
 
 .plate-info__region {
