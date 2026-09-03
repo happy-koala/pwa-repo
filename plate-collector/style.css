@@ -109,7 +109,7 @@ h2 {
 }
 
 .view-title {
-  margin: -20px 0 20px;
+  margin: 5px;
   color: var(--text);
   font-family: var(--font-plate);
   font-size: clamp(2rem, 8vw, 3rem);
@@ -130,7 +130,8 @@ h2 {
   gap: .8rem;
   width: min(100%, var(--content-width));
   margin: 0 auto;
-  padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem;
+  /*padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem;*/
+  padding: 0px;
 }
 
 .brand {
@@ -281,7 +282,7 @@ main {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 1.75rem 0;
+  margin: 0.5rem 0;
   padding: 1rem;
   border-block: 1px solid var(--border);
 }
@@ -628,7 +629,7 @@ main {
   }
 
   main {
-    padding-top: 2rem;
+    padding-top: 1rem;
   }
 
   .primary-nav {
@@ -652,7 +653,7 @@ main {
 
 @media (min-width: 900px) {
   main {
-    padding-top: 3rem;
+    padding-top: 2rem;
   }
 
   .capture-mount {
