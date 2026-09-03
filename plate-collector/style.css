@@ -282,7 +282,7 @@ main {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin: 0.5rem 0;
+  margin: 1.0rem 0 0.5rem;
   padding: 1rem;
   border-block: 1px solid var(--border);
 }
