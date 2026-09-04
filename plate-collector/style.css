@@ -472,6 +472,10 @@ main {
   border-color: rgb(155 226 140 / 55%);
 }
 
+.plate-choice.is-collected .plate-choice__state {
+  color: var(--success);
+}
+
 .empty-state {
   padding: 2rem 1rem;
   text-align: center;
