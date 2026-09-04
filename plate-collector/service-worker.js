@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kennzeichen-sammler-v0.2.1';
+const CACHE_NAME = 'kennzeichen-sammler-v0.2.2';
 const APP_SHELL = [
   './index.html',
   './css/style.css',
