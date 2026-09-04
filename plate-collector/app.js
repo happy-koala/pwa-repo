@@ -117,8 +117,7 @@ function createCaptureInterface() {
   wrapper.innerHTML = `
     <div class="field">
       <label for="plate-search">Kennzeichen, Stadt, Gemeinde oder Landkreis eingeben</label>
-      <input id="plate-search" type="search" autocomplete="off" aria-describedby="plate-search-help">
-      <p id="plate-search-help" class="muted">Suche nach Kennzeichen oder Namen.</p>
+      <input id="plate-search" type="search" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="characters" aria-describedby="plate-search-help">
     </div>
     <p class="muted results-count" data-results-count role="status" aria-live="polite" hidden></p>
     <div class="plate-results" data-plate-list hidden></div>`;
@@ -126,7 +125,15 @@ function createCaptureInterface() {
   elements.captureMount.append(wrapper);
 
   const input = wrapper.querySelector('#plate-search');
-  input.addEventListener('input', () => renderPlateList(input.value));
+  input.addEventListener('input', () => {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    input.value = input.value.toUpperCase();
+    if (start !== null && end !== null) {
+      input.setSelectionRange(start, end);
+    }
+    renderPlateList(input.value);
+  });
 }
 
 function renderPlateList(query = '') {

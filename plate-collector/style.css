@@ -104,7 +104,7 @@ p {
 
 h2 {
   margin-bottom: .75rem;
-  font-size: clamp(1.45rem, 5vw, 2rem);
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
   line-height: 1.05;
 }
 
@@ -112,7 +112,7 @@ h2 {
   margin: 5px;
   color: var(--text);
   font-family: var(--font-plate);
-  font-size: clamp(2rem, 8vw, 3rem);
+  font-size: clamp(1.5rem, 6vw, 2rem);
   line-height: .95;
   letter-spacing: .02em;
 }
@@ -220,7 +220,8 @@ main {
 .capture-mount {
   width: 100%;
   max-width: 34rem;
-  margin: 20px auto;
+  margin: auto;
+  margin-top: 2rem;
 }
 
 .card,
