@@ -284,7 +284,7 @@ export const PLATE_CODES = [
   {"code": "HF", "name": "Herford", "region": "NRW", "country": "DE"},
   {"code": "HG", "name": "Hochtaunuskreis (Bad Homburg)", "region": "HE", "country": "DE"},
   {"code": "HGN", "name": "Hagenow", "region": "MV", "country": "DE"},
-  {"code": "HGW", "name": "Greifswald", "region": "MV", "country": "DE"},
+  {"code": "HGW", "name": "Hansestadt Greifswald", "region": "MV", "country": "DE"},
   {"code": "HH", "name": "Hansestadt Hamburg", "region": "HH", "country": "DE"},
   {"code": "HHM", "name": "Hohenmölsen", "region": "ST", "country": "DE"},
   {"code": "HI", "name": "Hildesheim", "region": "NI", "country": "DE"},
