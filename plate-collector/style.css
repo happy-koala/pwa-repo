@@ -130,8 +130,7 @@ h2 {
   gap: .8rem;
   width: min(100%, var(--content-width));
   margin: 0 auto;
-  /*padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem;*/
-  padding: 0px;
+  padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem;
 }
 
 .brand {
