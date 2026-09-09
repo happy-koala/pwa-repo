@@ -272,6 +272,55 @@ main {
   color: #777b78;
 }
 
+.input-clearable {
+  position: relative;
+}
+
+.input-clearable > input {
+  padding-right: 2.6rem;
+}
+
+.input-clear-button {
+  position: absolute;
+  top: 50%;
+  right: .35rem;
+  transform: translateY(-50%);
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.input-clear-button[hidden] {
+  display: none;
+}
+
+.input-clear-button:hover {
+  background: rgb(247 210 30 / 12%);
+  color: var(--yellow-bright);
+}
+
+.input-clear-button:focus-visible {
+  outline: .18rem solid var(--yellow-bright);
+  outline-offset: .15rem;
+  background: transparent;
+  color: var(--yellow-bright);
+}
+
+.input-clear-button:active {
+  transform: translateY(1px);
+}
+
 .field-help {
   margin: .45rem 0 0;
   color: var(--muted);
@@ -295,7 +344,7 @@ main {
   letter-spacing: .1em;
 }
 
-.summary-number {
+.summary-number, .summary-total {
   display: block;
   color: var(--yellow-bright);
   font: 700 2.25rem/1 'Roboto Condensed', sans-serif;
@@ -358,6 +407,14 @@ main {
 
 .region-progress strong {
   font-size: 1.05rem;
+}
+
+.region-progress.is-complete {
+  border-color: var(--success);
+}
+
+.region-progress.is-empty {
+  border-color: #e2685c;
 }
 
 .plate-results {

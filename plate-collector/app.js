@@ -12,6 +12,7 @@ const elements = {
   captureView: document.querySelector('#view-erfassen'),
   captureMount: document.querySelector('[data-capture-mount]'),
   summaryNumber: document.querySelector('.summary-number'),
+  summaryTotal: document.querySelector('.summary-total'),
   summaryNote: document.querySelector('.summary-note'),
   emptyState: document.querySelector('.empty-state')
 };
@@ -60,11 +61,11 @@ function updateSummary() {
   const total = PLATE_CODES.length;
 
   if (elements.summaryNumber) {
-    elements.summaryNumber.textContent = String(collectedCount).padStart(2, '0');
+    elements.summaryNumber.textContent = String(collectedCount);
   }
 
-  if (elements.summaryNote) {
-    elements.summaryNote.innerHTML = `<strong>${collectedCount} / ${total}</strong> gesammelt`;
+  if (elements.summaryTotal) {
+    elements.summaryTotal.textContent = String(total);
   }
 }
 
@@ -117,7 +118,10 @@ function createCaptureInterface() {
   wrapper.innerHTML = `
     <div class="field">
       <label for="plate-search">Kennzeichen, Stadt, Gemeinde oder Landkreis eingeben</label>
-      <input id="plate-search" type="search" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="characters" aria-describedby="plate-search-help">
+      <div class="input-clearable">
+        <input id="plate-search" type="text" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="characters" aria-describedby="plate-search-help">
+        <button type="button" class="input-clear-button" aria-label="Eingabe löschen" hidden>&times;</button>
+      </div>
     </div>
     <p class="muted results-count" data-results-count role="status" aria-live="polite" hidden></p>
     <div class="plate-results" data-plate-list hidden></div>`;
@@ -125,6 +129,13 @@ function createCaptureInterface() {
   elements.captureMount.append(wrapper);
 
   const input = wrapper.querySelector('#plate-search');
+  const clearButton = wrapper.querySelector('.input-clear-button');
+
+  const syncClearButton = () => {
+    if (!clearButton) return;
+    clearButton.hidden = input.value.length === 0;
+  };
+
   input.addEventListener('input', () => {
     const start = input.selectionStart;
     const end = input.selectionEnd;
@@ -133,7 +144,17 @@ function createCaptureInterface() {
       input.setSelectionRange(start, end);
     }
     renderPlateList(input.value);
+    syncClearButton();
   });
+
+  if (clearButton) {
+    clearButton.addEventListener('click', () => {
+      input.value = '';
+      syncClearButton();
+      renderPlateList('');
+      input.focus();
+    });
+  }
 }
 
 function renderPlateList(query = '') {
@@ -265,16 +286,22 @@ function renderCollectionOverview() {
   list.className = 'collection-grid';
 
   groupedRegions().forEach(([key, group]) => {
-    const item = document.createElement('div');
-    item.className = 'card region-progress';
+      const item = document.createElement('div');
+      item.className = 'card region-progress';
 
-    item.innerHTML = '<strong></strong><span class="muted"></span>';
+      if (group.collected === group.total) {
+        item.classList.add('is-complete');
+      } else if (group.collected === 0) {
+        item.classList.add('is-empty');
+      }
 
-    item.querySelector('strong').textContent = regionName(key);
-    item.querySelector('span').textContent = `${group.collected} / ${group.total}`;
+      item.innerHTML = '<strong></strong><span class="muted"></span>';
 
-    list.append(item);
-  });
+      item.querySelector('strong').textContent = regionName(key);
+      item.querySelector('span').textContent = `${group.collected} / ${group.total}`;
+
+      list.append(item);
+    });
 
   panel.append(list);
 }
