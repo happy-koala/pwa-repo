@@ -5,6 +5,26 @@ import { REGIONS, PLATE_CODES } from './plates-data.js';
 
 const STORAGE_KEY = 'collectedPlates';
 const STORAGE_VERSION = 1;
+
+const REGION_NAMES = {
+  BW: 'Baden-Württemberg',
+  BY: 'Bayern',
+  BE: 'Berlin',
+  BB: 'Brandenburg',
+  HB: 'Bremen',
+  HH: 'Hamburg',
+  HE: 'Hessen',
+  MV: 'Mecklenburg-Vorpommern',
+  NI: 'Niedersachsen',
+  NW: 'Nordrhein-Westfalen',
+  RP: 'Rheinland-Pfalz',
+  SL: 'Saarland',
+  SN: 'Sachsen',
+  ST: 'Sachsen-Anhalt',
+  SH: 'Schleswig-Holstein',
+  TH: 'Thüringen'
+};
+
 const collection = new Map(); // code -> collectedAt (YYYY-MM-DD HH:mm:ss)
 
 const elements = {
@@ -14,8 +34,21 @@ const elements = {
   summaryNumber: document.querySelector('.summary-number'),
   summaryTotal: document.querySelector('.summary-total'),
   summaryNote: document.querySelector('.summary-note'),
-  emptyState: document.querySelector('.empty-state')
+  emptyState: document.querySelector('.empty-state'),
+  plateDetailDialog: document.querySelector('[data-plate-detail-dialog]'),
+  plateDetailCode: document.querySelector('[data-plate-detail-code]'),
+  plateDetailShieldCode: document.querySelector('[data-plate-detail-shield-code]'),
+  plateDetailName: document.querySelector('[data-plate-detail-name]'),
+  plateDetailRegion: document.querySelector('[data-plate-detail-region]'),
+  plateDetailTimestampRow: document.querySelector('[data-plate-detail-timestamp-row]'),
+  plateDetailTimestamp: document.querySelector('[data-plate-detail-timestamp]'),
+  plateDetailToggle: document.querySelector('[data-plate-detail-toggle]')
 };
+
+const MONTH_NAMES = [
+  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+];
 
 function formatTimestamp(date = new Date()) {
   const pad = (n) => String(n).padStart(2, '0');
@@ -26,6 +59,27 @@ function formatTimestamp(date = new Date()) {
   const mm = pad(date.getMinutes());
   const ss = pad(date.getSeconds());
   return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+}
+
+/**
+ * Formatiert einen gespeicherten Timestamp-String (YYYY-MM-DD HH:mm:ss)
+ * im Format "18. August 2026, 13:47 Uhr".
+ */
+function formatGermanDate(storedTimestamp) {
+  if (!storedTimestamp) return '';
+
+  const [datePart, timePart] = storedTimestamp.split(' ');
+  const [year, month, day] = (datePart || '').split('-').map(Number);
+  const [hour, minute] = (timePart || '').split(':').map(Number);
+
+  if (!year || !month || !day) return storedTimestamp;
+
+  const dayStr = String(day);
+  const monthName = MONTH_NAMES[month - 1] || '';
+  const hh = String(hour ?? 0).padStart(2, '0');
+  const mm = String(minute ?? 0).padStart(2, '0');
+
+  return `${dayStr}. ${monthName} ${year}, ${hh}:${mm} Uhr`;
 }
 
 function loadCollected() {
@@ -52,7 +106,11 @@ function saveCollected() {
 }
 
 function regionName(region) {
-  if (typeof REGIONS === 'object' && REGIONS !== null) return REGIONS[region] || region;
+  if (!region) return 'Weitere';
+  if (REGION_NAMES[region]) return REGION_NAMES[region];
+  if (typeof REGIONS === 'object' && REGIONS !== null) {
+    return REGIONS[region] || region;
+  }
   return region;
 }
 
@@ -106,6 +164,39 @@ function fillPlateCard(node, plate) {
 
   const shield = node.querySelector('.plate-shield:not(.plate-shield--small)');
   shield.classList.toggle('plate-shield--deprecated', Boolean(plate.isDeprecated));
+}
+
+/**
+ * Öffnet den Detail-Dialog für ein Kennzeichen.
+ * mode: 'capture' (Erfassen, mit Toggle-Button) oder 'collection' (Sammlung, mit Timestamp)
+ */
+function openPlateDetailDialog(plate, mode) {
+  const dialog = elements.plateDetailDialog;
+  if (!dialog) return;
+
+  elements.plateDetailShieldCode.textContent = plate.code;
+  elements.plateDetailName.textContent = plate.name;
+  elements.plateDetailRegion.textContent = regionName(plate.region);
+
+  const isCollected = collection.has(plate.code);
+  const collectedAt = collection.get(plate.code);
+
+  elements.plateDetailTimestampRow.hidden = !collectedAt;
+  elements.plateDetailTimestamp.textContent = collectedAt ? formatGermanDate(collectedAt) : '';
+
+  if (mode === 'collection') {
+    elements.plateDetailToggle.hidden = true;
+  } else {
+    elements.plateDetailToggle.hidden = false;
+    elements.plateDetailToggle.textContent = isCollected ? 'Aus Sammlung entfernen' : 'Zur Sammlung hinzufügen';
+
+    elements.plateDetailToggle.onclick = () => {
+      togglePlate(plate.code);
+      openPlateDetailDialog(plate, mode);
+    };
+  }
+
+  dialog.showModal();
 }
 
 function createCaptureInterface() {
@@ -205,7 +296,6 @@ function renderPlateList(query = '') {
   matches.forEach((plate) => {
     const isCollected = collection.has(plate.code);
     const button = document.createElement('button');
-
     button.type = 'button';
     button.className = `plate-card plate-choice${isCollected ? ' is-collected' : ''}`;
     button.setAttribute('aria-pressed', String(isCollected));
@@ -214,7 +304,7 @@ function renderPlateList(query = '') {
     fillPlateCard(button, plate);
     button.querySelector('.plate-choice__state').textContent = isCollected ? '✓' : '+';
 
-    button.addEventListener('click', () => togglePlate(plate.code));
+    button.addEventListener('click', () => openPlateDetailDialog(plate, 'capture'));
     fragment.append(button);
   });
 
@@ -334,13 +424,8 @@ function renderAllCollection() {
   }
 
   const title = document.createElement('h2');
-  title.textContent = `${collection.size} Kennzeichen gesammelt`;
+  title.textContent = 'Alle erfassten Kennzeichen';
   panel.append(title);
-
-  const note = document.createElement('p');
-  note.className = 'muted';
-  note.textContent = 'Alle bisher erfassten Kennzeichen.';
-  panel.append(note);
 
   const list = document.createElement('div');
   list.className = 'plate-results collected-list';
@@ -348,10 +433,12 @@ function renderAllCollection() {
   PLATE_CODES
     .filter((plate) => collection.has(plate.code))
     .forEach((plate) => {
-      const item = document.createElement('div');
+      const item = document.createElement('button');
+      item.type = 'button';
       item.className = 'plate-card';
       item.innerHTML = buildPlateCardMarkup();
       fillPlateCard(item, plate);
+      item.addEventListener('click', () => openPlateDetailDialog(plate, 'collection'));
       list.append(item);
     });
 
@@ -361,7 +448,6 @@ function renderAllCollection() {
 function showCollectionView(name) {
   document.querySelectorAll('[data-collection-view]').forEach((button) => {
     const active = button.dataset.collectionView === name;
-
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-selected', String(active));
   });

@@ -393,7 +393,7 @@ main {
 
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: .85rem;
 }
 
@@ -406,7 +406,14 @@ main {
 }
 
 .region-progress strong {
+  overflow-wrap: normal;
+  word-break: normal;
   font-size: 1.05rem;
+}
+
+.region-progress span {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .region-progress.is-complete {
@@ -437,6 +444,7 @@ main {
   align-items: center;
   gap: .8rem;
   width: 100%;
+  min-width: 0;
   padding: .6rem .8rem;
   color: var(--text);
   background: var(--bg);
@@ -461,7 +469,7 @@ main {
   min-width: 4.6rem;
   height: 2.1rem;
   border: .1rem solid #1a1a1a;
-  border-radius: .25rem;
+  border-radius: .35em;
   background: white;
   box-shadow: inset 0 0 0 .12rem rgb(0 0 0 / 15%);
 }
@@ -490,7 +498,7 @@ main {
 }
 
 .plate-info {
-  display: inline;
+  display: flex;
   flex: 1;
   flex-direction: column;
   gap: .15rem;
@@ -729,4 +737,47 @@ main {
     animation-duration: .01ms !important;
     transition-duration: .01ms !important;
   }
+}
+
+.plate-card {
+  cursor: pointer;
+}
+
+.plate-detail-shield {
+  display: flex;
+  justify-content: center;
+  margin: .5rem 0;
+}
+
+.plate-detail-shield .plate-shield {
+  min-width: 7rem;
+  height: 3.2rem;
+}
+
+.plate-detail-shield .plate-shield__code {
+  font-size: 1.7rem;
+}
+
+.plate-detail-list {
+  display: grid;
+  gap: .7rem;
+  margin: 0;
+}
+
+.plate-detail-list > div {
+  display: grid;
+  gap: .15rem;
+}
+
+.plate-detail-list dt {
+  color: var(--muted);
+  font-size: .75rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.plate-detail-list dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
 }

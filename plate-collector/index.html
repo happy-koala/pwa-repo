@@ -94,6 +94,34 @@
     </form>
   </dialog>
 
+  <dialog class="collection-dialog" data-plate-detail-dialog aria-label="Kennzeichendetails">
+    <form method="dialog" class="collection-dialog__content">
+      <div class="plate-detail-shield" aria-hidden="true">
+        <span class="plate-shield">
+          <span class="plate-shield__code" data-plate-detail-shield-code></span>
+        </span>
+      </div>
+      <dl class="plate-detail-list">
+        <div>
+          <dt>Name</dt>
+          <dd data-plate-detail-name></dd>
+        </div>
+        <div>
+          <dt>Bundesland</dt>
+          <dd data-plate-detail-region></dd>
+        </div>
+        <div data-plate-detail-timestamp-row hidden>
+          <dt>Erfasst am</dt>
+          <dd data-plate-detail-timestamp></dd>
+        </div>
+      </dl>
+      <div class="collection-dialog__actions">
+        <button class="collection-tool-button" type="button" data-plate-detail-toggle hidden></button>
+        <button class="collection-tool-button collection-tool-button--quiet" type="button" data-close-dialog>Schließen</button>
+      </div>
+    </form>
+  </dialog>
+
   <script type="module" src="./app.js"></script>
   <script>
     (() => {
@@ -163,6 +191,5 @@
       });
     })();
   </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
