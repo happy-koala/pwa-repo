@@ -769,6 +769,10 @@ main {
   gap: .15rem;
 }
 
+.plate-detail-list > div[hidden] {
+  display: none;
+}
+
 .plate-detail-list dt {
   color: var(--muted);
   font-size: .75rem;
@@ -781,3 +785,4 @@ main {
   color: var(--text);
   font-size: 1rem;
 }
+
