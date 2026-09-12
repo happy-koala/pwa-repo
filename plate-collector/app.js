@@ -369,7 +369,7 @@ function renderCollectionOverview() {
   panel.replaceChildren();
 
   const title = document.createElement('h2');
-  title.textContent = 'Nach Bundesland / Region';
+  title.textContent = 'Nach Bundesland';
   panel.append(title);
 
   const list = document.createElement('div');
