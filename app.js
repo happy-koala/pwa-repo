@@ -27,7 +27,7 @@ const apps = [
    {
      name: "Undercover (WIP)",
      folder: "undercover-pwa",
-     icon: "icon-192.png"
+     icon: "icons/icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
