@@ -16,17 +16,17 @@ const apps = [
   },
    {
      name: "Sudoku (WIP)",
-     folder: "sudoku"
+     folder: "sudoku",
      icon: "icon-192.png"
   },
    {
      name: "Futoshiki (WIP)",
-     folder: "futoshiki"
+     folder: "futoshiki",
      icon: "icons/icon-192.png"
   },
    {
      name: "Undercover (WIP)",
-     folder: "undercover-pwa"
+     folder: "undercover-pwa",
      icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
