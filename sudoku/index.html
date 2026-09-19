@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#b6925a" />
+  <meta name="description" content="Sudoku – Progressive Web App, offline spielbar." />
+  <title>Sudoku</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- App icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+</head>
+<body>
+
+  <header class="app-header" role="banner">
+    <button id="back-btn" class="btn-back" hidden aria-label="Zurück zum Startbildschirm">
+      ← Zurück
+    </button>
+    <h1>Sudoku</h1>
+    <span style="width: 4.5rem;" aria-hidden="true"></span>
+  </header>
+
+  <main class="app" id="app">
+
+    <!-- ===== Start screen =================================== -->
+    <section id="start-screen" class="screen start-screen active" aria-labelledby="start-heading">
+      <h2 id="start-heading">Wähle eine Schwierigkeit</h2>
+      <p>Ein neues Rätsel wird sofort generiert.</p>
+      <div class="difficulty-row">
+        <button class="btn-difficulty" data-difficulty="easy">Leicht</button>
+        <button class="btn-difficulty" data-difficulty="medium">Mittel</button>
+        <button class="btn-difficulty" data-difficulty="hard">Schwer</button>
+      </div>
+      <div id="loading" class="loading" hidden>Rätsel wird vorbereitet …</div>
+    </section>
+
+    <!-- ===== Game screen ==================================== -->
+    <section id="game-screen" class="screen" aria-labelledby="game-heading">
+      <div class="game-header">
+        <span id="difficulty-display" class="difficulty-label">—</span>
+        <span id="timer" class="timer">00:00</span>
+      </div>
+
+      <div class="board-wrap">
+        <div id="board" class="board" role="grid" aria-label="Sudoku-Spielfeld">
+          <!-- 81 cells injected by main.js -->
+        </div>
+      </div>
+
+      <div id="keypad" class="keypad" role="group" aria-label="Zifferntastatur">
+        <!-- Buttons 1-9 + erase injected by main.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Libraries (load order matters: solver before generator before UI) -->
+  <script src="solver.js"></script>
+  <script src="generator.js"></script>
+  <script src="main.js"></script>
+
+  <!-- Service worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+          // Non-fatal: app still works online; log for debugging.
+          console.warn('Service Worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

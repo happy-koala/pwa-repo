@@ -1,0 +1,332 @@
+/* ============================================================
+   FUTOSHIKI PWA – Stylesheet
+   Ziegelwand-Hintergrund, Brettlayout mit Lücken für
+   Ungleichheits-Constraints (<, >, ∧, ∨).
+   ============================================================ */
+
+:root {
+  --brick-bg: #8a3b25;
+  --brick-line: #5a2412;
+  --brick-mortar: #c9b48a;
+  --paper: #f7efe2;
+  --paper-edge: #d8c9a8;
+  --ink: #2a1a10;
+  --accent: #6b2a16;
+  --accent-strong: #4a1c0d;
+  --ok: #2e7d32;
+  --err: #b71c1c;
+  --hint: #f9a825;
+  --font-stack: "Georgia", "Times New Roman", serif;
+  --ui-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--ui-font);
+}
+
+body {
+  /* Schlichter, flacher Hintergrund in der dominanten Ziegel-Grundfarbe
+     (kein Muster, keine Fugen, keine Gradients). */
+  background-color: var(--brick-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* -------- Header -------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 16px 10px;
+  background: linear-gradient(180deg, rgba(247,239,226,0.96), rgba(247,239,226,0.86));
+  border-bottom: 2px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  backdrop-filter: blur(4px);
+}
+
+.app-title {
+  margin: 0 0 10px;
+  font-family: var(--font-stack);
+  font-size: 28px;
+  letter-spacing: 0.04em;
+  color: var(--accent-strong);
+  text-align: center;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.control {
+  display: inline-flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: var(--accent-strong);
+}
+
+.control-label {
+  font-weight: 600;
+  margin-bottom: 2px;
+  letter-spacing: 0.02em;
+}
+
+.control select {
+  font-size: 15px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  min-width: 110px;
+}
+
+.control select:focus {
+  outline: 2px solid var(--hint);
+  outline-offset: 1px;
+}
+
+.btn-primary,
+.btn-secondary {
+  font-size: 15px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  border: 1.5px solid var(--accent);
+  transition: transform 0.05s ease, background 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.btn-primary:hover { background: var(--accent-strong); }
+.btn-primary:active { transform: translateY(1px); }
+
+.btn-secondary {
+  background: var(--paper);
+  color: var(--accent-strong);
+}
+
+.btn-secondary:hover { background: var(--paper-edge); }
+.btn-secondary:active { transform: translateY(1px); }
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--accent-strong);
+}
+
+.status.ok { color: var(--ok); font-weight: 600; }
+.status.err { color: var(--err); font-weight: 600; }
+
+.timer {
+  font-family: var(--font-stack);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  background: var(--paper);
+  padding: 2px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+}
+
+/* -------- Main / Board -------- */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 18px 12px 24px;
+}
+
+.board-wrapper {
+  background: var(--paper);
+  padding: 14px;
+  border: 3px solid var(--accent-strong);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35),
+              inset 0 0 0 1px var(--accent);
+}
+
+/*
+  Brett: (2N-1) x (2N-1) Raster.
+  - ungerade Zeile, ungerade Spalte = Zelle
+  - ungerade Zeile, gerade Spalte = horizontaler Gap (kann < oder > enthalten)
+  - gerade Zeile, ungerade Spalte = vertikaler Gap (kann ∧ oder ∨ enthalten)
+  - gerade Zeile, gerade Spalte = Eckpunkt
+  Cell padding = 0 (siehe .cell)
+*/
+.board {
+  --cell-size: 64px;
+  --gap-size: 22px; /* Platz für Constraint-Symbole */
+  --N: 4;
+  display: grid;
+  /* Spalten abwechselnd Zelle/Lücke: 64 22 64 22 64 22 64 = 2N-1 Tracks für N=4 */
+  grid-template-columns: repeat(calc(var(--N) - 1), var(--cell-size) var(--gap-size)) var(--cell-size);
+  grid-template-rows:    repeat(calc(var(--N) - 1), var(--cell-size) var(--gap-size)) var(--cell-size);
+  gap: 0;
+  background: var(--paper);
+}
+
+.board[data-size="4"] { --N: 4; --cell-size: 64px; --gap-size: 22px; }
+.board[data-size="5"] { --N: 5; --cell-size: 56px; --gap-size: 20px; }
+.board[data-size="6"] { --N: 6; --cell-size: 48px; --gap-size: 18px; }
+
+/* Zell-Look */
+.cell {
+  /* padding/minimal, damit die Ziffer die Zelle groß ausfüllt */
+  padding: 0;
+  margin: 0;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* line-height: 1 = Flex-Mittelpunkt == Ziffern-Mittelpunkt */
+  line-height: 1;
+  background: var(--paper);
+  border: 1.2px solid var(--paper-edge);
+  font-family: var(--font-stack);
+  font-weight: 600;
+  /* Zifferngröße = 70% der Zellhöhe (prominent) */
+  font-size: calc(var(--cell-size) * 0.70);
+  color: var(--ink);
+  user-select: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.12s ease;
+}
+
+.cell.given {
+  background: #e9dcbf;
+  color: var(--accent-strong);
+  cursor: default;
+}
+
+.cell.user {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.cell.selected {
+  outline: 3px solid var(--hint);
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.cell.hint {
+  background: #fff3c4;
+}
+
+.cell.ok { background: #d6ef58dd; }
+.cell.err { background: #f6d4d4; }
+
+/* Eingabemarker (Numpad-Overlay, 1..N) */
+.cell .numpad {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-wrap: wrap;
+  background: rgba(247,239,226,0.95);
+  border: 1px solid var(--accent);
+}
+
+.cell.selected .numpad { display: flex; }
+
+.cell .numpad button {
+  flex: 1 0 33.333%;
+  border: 1px solid var(--accent);
+  background: var(--paper);
+  font-family: var(--font-stack);
+  font-weight: 600;
+  font-size: calc(var(--cell-size) * 0.30);
+  color: var(--accent-strong);
+  padding: 0;
+  cursor: pointer;
+}
+
+.cell .numpad button:hover { background: var(--paper-edge); }
+
+/* Gap-Slots für Constraint-Symbole */
+.gap {
+  width: var(--gap-size);
+  height: var(--gap-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: var(--font-stack);
+  font-weight: 700;
+  /* Symbol etwas kleiner als Track, damit es sicher mittig sitzt */
+  font-size: calc(var(--gap-size) * 0.80);
+  color: var(--accent-strong);
+  user-select: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Horizontaler Gap sitzt in 22px-breiter Spalte (passt) und 64px-hoher Zeile.
+   -> align-self: center zentriert die 22px-Box vertikal in der 64px-Zeile. */
+.gap.horizontal { align-self: center; }
+/* Vertikaler Gap sitzt in 64px-breiter Spalte und 22px-hoher Zeile (passt).
+   -> justify-self: center zentriert die 22px-Box horizontal in der 64px-Spalte. */
+.gap.vertical   { justify-self: center; }
+
+/* Ecken ohne Inhalt */
+.corner {
+  width: var(--gap-size);
+  height: var(--gap-size);
+  background: transparent;
+}
+
+/* -------- Aktionen -------- */
+.action-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* -------- Footer -------- */
+.app-footer {
+  text-align: center;
+  padding: 10px;
+  color: var(--paper);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  font-size: 12px;
+}
+
+/* -------- Responsiveness -------- */
+@media (max-width: 480px) {
+  .board[data-size="4"] { --cell-size: 56px; --gap-size: 18px; }
+  .board[data-size="5"] { --cell-size: 46px; --gap-size: 16px; }
+  .board[data-size="6"] { --cell-size: 40px; --gap-size: 14px; }
+  .app-title { font-size: 22px; }
+  .control select { min-width: 96px; font-size: 14px; }
+  .btn-primary, .btn-secondary { font-size: 14px; padding: 7px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

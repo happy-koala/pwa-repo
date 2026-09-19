@@ -1,0 +1,285 @@
+/* ============================================================
+   style.css — Sudoku PWA
+   Sand-toned, calm colour palette with a clearly separated
+   header, a 9x9 grid and a digit keypad. Fully responsive.
+   ============================================================ */
+
+:root {
+  /* Sand palette */
+  --sand-1: #f5ecd6;
+  --sand-2: #e8dcc3;
+  --sand-3: #d9c9a3;
+  --sand-4: #c5b287;
+
+  /* Board */
+  --board-bg: rgba(255, 255, 255, 0.88);
+  --board-line-thin: rgba(110, 90, 60, 0.45);
+  --board-line-thick: #4a3a20;
+
+  /* Cell states */
+  --cell-bg: rgba(255, 255, 255, 0.0);
+  --cell-hover: rgba(180, 140, 70, 0.15);
+  --cell-selected-bg: #ffe9a8;
+  --cell-selected-border: #b07a1d;
+  --cell-peer: rgba(180, 140, 70, 0.10);
+  --cell-same-number: rgba(180, 140, 70, 0.22);
+
+  /* Text */
+  --text-given: #2c2110;
+  --text-user: #1f4f8a;
+  --text-error: #a23030;
+
+  /* Header */
+  --header-bg: #b6925a;
+  --header-text: #fff8e6;
+  --header-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+
+  /* Keypad */
+  --key-bg: #fff7e3;
+  --key-bg-hover: #f0e3bf;
+  --key-text: #3a2a10;
+  --key-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-given);
+}
+
+/* Sand background: gentle vertical gradient with a soft grain via
+   repeating-linear-gradient so we get texture without loading an image. */
+body {
+  background-color: var(--sand-2);
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      rgba(180, 150, 100, 0.04) 0px,
+      rgba(180, 150, 100, 0.04) 2px,
+      transparent 2px,
+      transparent 6px
+    ),
+    radial-gradient(circle at 20% 10%, #f1e3c2 0%, transparent 55%),
+    radial-gradient(circle at 80% 90%, #d6bf90 0%, transparent 55%),
+    linear-gradient(180deg, #efe2c4 0%, #d9c9a3 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* ====== Header ============================================== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--header-bg);
+  color: var(--header-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  box-shadow: var(--header-shadow);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+}
+
+.btn-back {
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--header-text);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.btn-back:hover { background: rgba(255, 255, 255, 0.30); }
+.btn-back[hidden] { display: none; }
+
+/* ====== Layout ============================================== */
+.app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ====== Start screen ======================================== */
+.start-screen {
+  text-align: center;
+  padding-top: 2rem;
+}
+.start-screen h2 {
+  font-size: 1.4rem;
+  margin: 0 0 0.4rem 0;
+  color: #4a3a20;
+}
+.start-screen p {
+  margin: 0 0 1.5rem 0;
+  color: #6a5530;
+}
+.difficulty-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: stretch;
+  max-width: 320px;
+  margin: 0 auto;
+}
+.btn-difficulty {
+  background: var(--board-bg);
+  color: var(--text-given);
+  border: 2px solid var(--sand-4);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+.btn-difficulty:hover { background: #fff8e7; transform: translateY(-1px); }
+.btn-difficulty:active { transform: translateY(0); }
+
+.loading {
+  margin-top: 1.5rem;
+  color: #6a5530;
+  font-style: italic;
+}
+
+/* ====== Game screen ========================================= */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--board-bg);
+  border: 1px solid var(--sand-4);
+  border-radius: 0.6rem;
+}
+.difficulty-label {
+  font-weight: 600;
+  color: #4a3a20;
+}
+.timer {
+  font-variant-numeric: tabular-nums;
+  color: #6a5530;
+}
+
+/* Board container: square grid via CSS grid (9 columns), aspect-ratio
+   keeps it perfectly square on any width. */
+.board-wrap {
+  background: var(--board-bg);
+  border-radius: 0.75rem;
+  padding: 0.6rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+  border: 2px solid var(--board-line-thick);
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border: 2px solid var(--board-line-thick);
+  background: var(--board-bg);
+  gap: 1px; /* thin separators drawn by background */
+}
+
+.cell {
+  background: var(--cell-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1rem, 5.5vw, 1.6rem);
+  font-weight: 600;
+  user-select: none;
+  cursor: pointer;
+  color: var(--text-user);
+  position: relative;
+  transition: background 0.12s ease;
+}
+
+.cell.given {
+  color: var(--text-given);
+  font-weight: 700;
+  cursor: default;
+}
+
+.cell.selected {
+  background: var(--cell-selected-bg);
+  outline: 2px solid var(--cell-selected-border);
+  outline-offset: -2px;
+  z-index: 2;
+}
+
+.cell.peer { background: var(--cell-peer); }
+.cell.same-number { background: var(--cell-same-number); }
+
+/* Thick 3x3 box borders: drawn with box-shadow on the relevant edges.
+   We use data attributes set in main.js to mark box boundaries. */
+.cell.box-right  { box-shadow: inset -2px 0 0 0 var(--board-line-thick); }
+.cell.box-bottom { box-shadow: inset 0 -2px 0 0 var(--board-line-thick); }
+.cell.box-right.box-bottom {
+  box-shadow:
+    inset -2px 0 0 0 var(--board-line-thick),
+    inset 0 -2px 0 0 var(--board-line-thick);
+}
+
+/* ====== Keypad ============================================== */
+.keypad {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 0.4rem;
+  width: 100%;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.key {
+  background: var(--key-bg);
+  color: var(--key-text);
+  border: 1px solid var(--sand-4);
+  border-radius: 0.5rem;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  font-size: clamp(1.1rem, 5vw, 1.5rem);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--key-shadow);
+  transition: background 0.12s ease, transform 0.08s ease;
+}
+.key:hover { background: var(--key-bg-hover); }
+.key:active { transform: translateY(1px); }
+.key.erase {
+  font-size: clamp(0.85rem, 3.6vw, 1.1rem);
+}
+
+/* ====== Utility / responsive ================================ */
+@media (max-width: 380px) {
+  .app { padding: 0.6rem; }
+  .app-header h1 { font-size: 1.1rem; }
+  .btn-back { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+  .keypad { gap: 0.3rem; }
+  .board-wrap { padding: 0.4rem; }
+}
+
+@media (min-width: 720px) {
+  .app-header h1 { font-size: 1.4rem; }
+  .cell { font-size: 1.7rem; }
+}

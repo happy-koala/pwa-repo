@@ -13,6 +13,21 @@ const apps = [
      name: "Flaschen sortieren (WIP)",
      folder: "bottle-sort"
   //   icon: "icon-192.png"
+  },
+   {
+     name: "Sudoku (WIP)",
+     folder: "sudoku"
+  //   icon: "icon-192.png"
+  },
+   {
+     name: "Futoshiki (WIP)",
+     folder: "futoshiki"
+  //   icon: "icon-192.png"
+  },
+   {
+     name: "Undercover (WIP)",
+     folder: "undercover-pwa"
+  //   icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
