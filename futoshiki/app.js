@@ -158,23 +158,6 @@ function buildCell(idx) {
   div.setAttribute('role', 'gridcell');
   div.setAttribute('tabindex', '0');
 
-  // Numpad (für leere Zellen)
-  if (!isGiven) {
-    const pad = document.createElement('div');
-    pad.className = 'numpad';
-    for (let n = 1; n <= current.N; n++) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = String(n);
-      b.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setCellValue(idx, n);
-      });
-      pad.appendChild(b);
-    }
-    div.appendChild(pad);
-  }
-
   // Tap-Zyklus auf editierbarer Zelle: aktueller Wert +1,
   // bei N -> leer (0), bei leer -> 1.
   div.addEventListener('click', () => {
