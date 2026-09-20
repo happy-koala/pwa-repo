@@ -2,15 +2,12 @@
 // FUTOSHIKI PWA – App-Logik
 // ============================================================
 import { generatePuzzle } from './generator.js';
-import { solveOne, countSolutions } from './solver.js';
+import { countSolutions } from './solver.js';
 
 // ---------- DOM-Refs ----------
 const $size = document.getElementById('size-select');
 const $diff = document.getElementById('difficulty-select');
 const $new  = document.getElementById('new-btn');
-const $check= document.getElementById('check-btn');
-const $hint = document.getElementById('hint-btn');
-const $solve= document.getElementById('solve-btn');
 const $board= document.getElementById('board');
 const $status = document.getElementById('status');
 const $timer = document.getElementById('timer');
@@ -36,9 +33,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function bindEvents() {
   $new.addEventListener('click', newPuzzle);
-  $check.addEventListener('click', onCheck);
-  $hint.addEventListener('click', onHint);
-  $solve.addEventListener('click', onSolve);
   $size.addEventListener('change', newPuzzle);
   $diff.addEventListener('change', newPuzzle);
 }
@@ -204,7 +198,7 @@ function setCellValue(idx, v) {
       : (cellEl.insertBefore(document.createTextNode(v === 0 ? '' : String(v)), cellEl.firstChild || null));
     cellEl.classList.remove('ok', 'err');
   }
-  clearHints();
+  checkAutoSolved();
 }
 
 
@@ -219,41 +213,60 @@ function cycleCellValue(idx) {
 }
 
 // ---------- Aktionen ----------
-function onCheck() {
+function checkAutoSolved() {
   if (!current) return;
-  // 1) Eindeutigkeit / Konsistenz prüfen via Solver
   const givens = new Set(current.givens);
-  // Wir bauen das Grid: alle nicht-leeren userValues + givens als fixiert.
   const grid = userValues.slice();
-  const c = countSolutions(grid, givens, current.constraints, current.N, 2);
   let allFilled = true;
   for (let i = 0; i < grid.length; i++) if (grid[i] === 0) { allFilled = false; break; }
-
-  for (const el of $board.querySelectorAll('.cell')) {
-    el.classList.remove('ok', 'err');
-  }
-  if (c === 0) {
-    setStatus('Widerspruch – Eingabe ist nicht konsistent.', 'err');
-    // markiere widersprüchliche Zellen, soweit möglich
-    markObviousErrors();
-    return;
-  }
-  if (!allFilled) {
-    if (c === 1) setStatus('Bisher konsistent – Lösung bisher eindeutig.', 'ok');
-    else setStatus('Bisher konsistent – aber noch nicht eindeutig.', '');
-    return;
-  }
-  // Voll gefüllt und c === 1 -> gelöst
-  if (c === 1) {
+  if (allFilled && isValidComplete(grid, givens, current.constraints, current.N)) {
     for (let i = 0; i < grid.length; i++) {
       const el = $board.querySelector(`.cell[data-idx="${i}"]`);
       if (el) el.classList.add('ok');
     }
-    setStatus('Gelöst! 🎉', 'ok');
+    setStatus('Gelöst! \uD83C\uDF89', 'ok');
     stopTimer();
-  } else {
-    setStatus('Mehr als eine Lösung – prüfe deine Eingabe.', 'err');
   }
+}
+
+// Prüft ein vollständig gefülltes Grid gegen alle Futoshiki-Regeln:
+//  - jeder Wert liegt im Bereich 1..N
+//  - jede Zeile enthält jede Zahl 1..N genau einmal
+//  - jede Spalte enthält jede Zahl 1..N genau einmal
+//  - alle Ungleichheits-Constraints (grid[a] < grid[b] bzw. grid[a] > grid[b])
+// Gibt true zurück, wenn das Grid alle Regeln erfüllt.
+function isValidComplete(grid, givens, constraints, N) {
+  // 1) Wertebereich
+  for (let i = 0; i < grid.length; i++) {
+    const v = grid[i];
+    if (!Number.isInteger(v) || v < 1 || v > N) return false;
+  }
+  // 2) Zeilen-Eindeutigkeit (jede Zahl 1..N genau einmal)
+  for (let r = 0; r < N; r++) {
+    const seen = new Set();
+    for (let c = 0; c < N; c++) {
+      const v = grid[r * N + c];
+      if (seen.has(v)) return false;
+      seen.add(v);
+    }
+  }
+  // 3) Spalten-Eindeutigkeit (jede Zahl 1..N genau einmal)
+  for (let c = 0; c < N; c++) {
+    const seen = new Set();
+    for (let r = 0; r < N; r++) {
+      const v = grid[r * N + c];
+      if (seen.has(v)) return false;
+      seen.add(v);
+    }
+  }
+  // 4) Ungleichheits-Constraints
+  for (const cn of constraints) {
+    const va = grid[cn.a];
+    const vb = grid[cn.b];
+    if (cn.op === '<' && !(va < vb)) return false;
+    if (cn.op === '>' && !(va > vb)) return false;
+  }
+  return true;
 }
 
 function markObviousErrors() {
@@ -293,50 +306,6 @@ function markObviousErrors() {
       }
     }
   }
-}
-
-function onHint() {
-  if (!current) return;
-  // Finde eine Zelle, deren Wert der Nutzer noch nicht gesetzt hat
-  const emptyIdxs = [];
-  for (let i = 0; i < userValues.length; i++) {
-    if (!current.givens.has(i) && userValues[i] === 0) emptyIdxs.push(i);
-  }
-  if (emptyIdxs.length === 0) {
-    setStatus('Keine leeren Zellen mehr.', '');
-    return;
-  }
-  const pick = emptyIdxs[Math.floor(Math.random() * emptyIdxs.length)];
-  // Lösung mit solveOne bestimmen
-  const sol = solveOne(current.clues.slice(), current.givens, current.constraints, current.N);
-  if (!sol) { setStatus('Tipp nicht verfügbar.', 'err'); return; }
-  userValues[pick] = sol[pick];
-  const cellEl = $board.querySelector(`.cell[data-idx="${pick}"]`);
-  if (cellEl) {
-    cellEl.classList.add('hint');
-    if (cellEl.firstChild && cellEl.firstChild.nodeType === 3) {
-      cellEl.firstChild.nodeValue = String(sol[pick]);
-    } else {
-      cellEl.insertBefore(document.createTextNode(String(sol[pick])), cellEl.firstChild || null);
-    }
-  }
-  setStatus('Tipp gesetzt.', 'ok');
-}
-
-function clearHints() {
-  for (const el of $board.querySelectorAll('.cell.hint')) {
-    el.classList.remove('hint');
-  }
-}
-
-function onSolve() {
-  if (!current) return;
-  const sol = solveOne(current.clues.slice(), current.givens, current.constraints, current.N);
-  if (!sol) { setStatus('Keine Lösung gefunden.', 'err'); return; }
-  userValues = sol.slice();
-  renderBoard();
-  setStatus('Lösung angezeigt.', 'ok');
-  stopTimer();
 }
 
 // ---------- Timer ----------
