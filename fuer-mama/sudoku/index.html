@@ -2,32 +2,37 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#b6925a" />
-  <meta name="description" content="Sudoku – Progressive Web App, offline spielbar." />
+  <meta name="description" content="Sudoku – ein klassisches 9x9 Zahlenrätsel als Progressive Web App. Wähle zwischen den Schwierigkeitsstufen Leicht, Mittel und Schwer und löse das Rätsel direkt im Browser, offline und ohne Installation." />
   <title>Sudoku</title>
 
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="style.css" />
 
-  <!-- App icons -->
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
   <link rel="apple-touch-icon" href="icon-192.png" />
 </head>
 <body>
 
   <header class="app-header" role="banner">
-    <button id="back-btn" class="btn-back" hidden aria-label="Zurück zum Startbildschirm">
-      ← Zurück
-    </button>
+    <a href="../index.html" class="home-icon" aria-label="Zurück zur Startseite">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Home">
+        <path d="M3 10.5 12 3l9 7.5"/>
+        <path d="M5 9.5V21h14V9.5"/>
+        <path d="M9 21v-6h6v6"/>
+      </svg>
+    </a>
+
+    <button id="back-btn" class="btn-back" hidden aria-label="Zurück zum Startbildschirm">← Zurück</button>
+
     <h1>Sudoku</h1>
-    <span style="width: 4.5rem;" aria-hidden="true"></span>
+
+    <span class="header-spacer" aria-hidden="true"></span>
   </header>
 
   <main class="app" id="app">
 
-    <!-- ===== Start screen =================================== -->
     <section id="start-screen" class="screen start-screen active" aria-labelledby="start-heading">
       <h2 id="start-heading">Wähle eine Schwierigkeit</h2>
       <p>Ein neues Rätsel wird sofort generiert.</p>
@@ -36,41 +41,39 @@
         <button class="btn-difficulty" data-difficulty="medium">Mittel</button>
         <button class="btn-difficulty" data-difficulty="hard">Schwer</button>
       </div>
-      <div id="loading" class="loading" hidden>Rätsel wird vorbereitet …</div>
+      <div id="loading" class="loading" hidden>Rätsel wird generiert …</div>
     </section>
 
-    <!-- ===== Game screen ==================================== -->
     <section id="game-screen" class="screen" aria-labelledby="game-heading">
+      <h2 id="game-heading" class="visually-hidden">Spielfeld</h2>
+
       <div class="game-header">
-        <span id="difficulty-display" class="difficulty-label">—</span>
+        <span id="difficulty-display" class="difficulty-label">Leicht</span>
         <span id="timer" class="timer">00:00</span>
       </div>
 
       <div class="board-wrap">
-        <div id="board" class="board" role="grid" aria-label="Sudoku-Spielfeld">
+        <div id="board" class="board" role="grid" aria-label="Sudoku Brett 9x9">
           <!-- 81 cells injected by main.js -->
         </div>
       </div>
 
-      <div id="keypad" class="keypad" role="group" aria-label="Zifferntastatur">
+      <div id="keypad" class="keypad" role="group" aria-label="Zifferntasten 1 bis 9 und Löschen">
         <!-- Buttons 1-9 + erase injected by main.js -->
       </div>
     </section>
 
   </main>
 
-  <!-- Libraries (load order matters: solver before generator before UI) -->
   <script src="solver.js"></script>
   <script src="generator.js"></script>
   <script src="main.js"></script>
 
-  <!-- Service worker registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch((err) => {
-          // Non-fatal: app still works online; log for debugging.
-          console.warn('Service Worker registration failed:', err);
+        navigator.serviceWorker.register('sw.js').catch(() => {
+          /* offline caching optional */
         });
       });
     }

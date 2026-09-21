@@ -1,28 +1,13 @@
 const apps = [
   {
-    name: "für Mama",
-    folder: "fuer-mama",
+    name: "Solitär",
+    folder: "solitaire",
     icon: "icon-192.png"
   },
-   {
-     name: "Kennzeichen sammeln",
-     folder: "plate-collector",
-     icon: "icon-192.png"
-  },
-   {
-     name: "Flaschen sortieren (WIP)",
-     folder: "bottle-sort"
-  //   icon: "icon-192.png"
-  },
-   {
-     name: "Futoshiki (WIP)",
-     folder: "futoshiki",
-     icon: "icons/icon-192.png"
-  },
-   {
-     name: "Undercover (WIP)",
-     folder: "undercover-pwa",
-     icon: "icons/icon-192.png"
+  {
+    name: "Sudoku",
+    folder: "sudoku",
+    icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {

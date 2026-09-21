@@ -31,10 +31,12 @@ header {
   color: #fff;
   flex-shrink: 0;
   gap: 8px;
+  position: relative;
   }
 
 .stats {
   display: flex;
+  margin-left: 45%;
   gap: 14px;
   font-size: 14px;
   flex-shrink: 0;
@@ -261,4 +263,40 @@ button.ctrl:active {
   padding: 12px 20px;
   font-size: 16px;
   font-weight: 700;
+  }
+
+/* Home-Link: zurück zur Auswahlseite (für-mama) */
+.home-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+  }
+
+.home-link svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  }
+
+.home-link:hover,
+.home-link:focus-visible {
+  background: rgba(0, 0, 0, 0.45);
+  outline: none;
+  }
+
+.home-link:active {
+  background: #146b3c;
+  transform: scale(0.94);
   }
