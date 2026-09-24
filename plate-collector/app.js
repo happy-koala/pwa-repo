@@ -385,10 +385,11 @@ function renderCollectionOverview() {
         item.classList.add('is-empty');
       }
 
-      item.innerHTML = '<strong></strong><span class="muted"></span>';
+      item.innerHTML = '<strong></strong><span><span class="muted"></span> <span class="tysk"></span></span>';
 
       item.querySelector('strong').textContent = regionName(key);
-      item.querySelector('span').textContent = `${group.collected} / ${group.total}`;
+      item.querySelector('.tysk').textContent = "DB" + key;
+      item.querySelector('.muted').textContent = `${group.collected} / ${group.total}`;
 
       list.append(item);
     });

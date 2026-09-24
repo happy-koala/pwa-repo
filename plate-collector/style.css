@@ -6,6 +6,16 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Tyskland';
+  src: url('./Tyskland_45_2.01_b.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  ascent-override: 85%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}
+
 :root {
   color-scheme: dark;
   --bg: #242628;
@@ -518,11 +528,26 @@ main {
   color: var(--yellow);
 }
 
-.plate-info__region {
+.plate-info__region, .tysk{
   color: var(--muted);
   font-size: .72rem;
   letter-spacing: .06em;
   text-transform: uppercase;
+}
+
+.tysk {
+  font-size: 3.75em;
+  font-family: "Tyskland", sans-serif;
+  font-variant-ligatures: common-ligatures discretionary-ligatures historical-ligatures contextual;
+  -webkit-font-feature-settings: "liga" 1, "dlig" 1, "hlig" 1, "clig" 1;
+  font-feature-settings: "liga" 1, "dlig" 1, "hlig" 1, "clig" 1;
+  letter-spacing: -0.0em;
+  text-rendering: optimizeLegibility;
+  line-height: 0.5em;
+  top: 0.25em;
+  right: -10px;
+  position: relative;
+  text-align: right !important;
 }
 
 .plate-choice__state {
