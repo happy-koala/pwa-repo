@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fuer-mama-v1';
+const CACHE_NAME = 'fuer-mama-v1.1';
 const PRECACHE_URLS = [
   './',
   './index.html',

@@ -8,6 +8,11 @@ const apps = [
     name: "Sudoku",
     folder: "sudoku",
     icon: "icon-192.png"
+  },
+  {
+    name: "Futoshiki",
+    folder: "futoshiki",
+    icon: "icon-192.png"
   }
   // Weitere Apps hier ergänzen:
   // {
