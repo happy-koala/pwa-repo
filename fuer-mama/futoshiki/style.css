@@ -330,3 +330,39 @@ body {
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* Home-Link: zurück zur Auswahlseite */
+.home-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.home-link svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.home-link:hover,
+.home-link:focus-visible {
+  background: rgba(0, 0, 0, 0.45);
+  outline: none;
+}
+
+.home-link:active {
+  background: #146b3c;
+  transform: scale(0.94);
+}
