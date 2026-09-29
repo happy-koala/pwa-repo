@@ -210,7 +210,7 @@ function setCellValue(idx, v) {
       : (cellEl.insertBefore(document.createTextNode(v === 0 ? '' : String(v)), cellEl.firstChild || null));
     cellEl.classList.remove('ok', 'err');
   }
-  clearHints();
+//  clearHints();
   checkAutoSolved();
 }
 

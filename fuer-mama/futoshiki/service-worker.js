@@ -4,7 +4,7 @@
 // then updates the cache from the response.
 // ============================================================
 
-const CACHE_NAME = 'futoshiki-pwa-v1';
+const CACHE_NAME = 'futoshiki-pwa-v1.0.1';
 const ASSETS = [
   './',
   './index.html',
