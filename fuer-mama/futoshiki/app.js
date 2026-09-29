@@ -8,6 +8,7 @@ import { countSolutions } from './solver.js';
 const $size = document.getElementById('size-select');
 const $diff = document.getElementById('difficulty-select');
 const $new  = document.getElementById('new-btn');
+const $restart = document.getElementById('btn-restart');
 const $board= document.getElementById('board');
 const $status = document.getElementById('status');
 const $timer = document.getElementById('timer');
@@ -33,6 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function bindEvents() {
   $new.addEventListener('click', newPuzzle);
+  $restart.addEventListener('click', restartPuzzle);
   $size.addEventListener('change', newPuzzle);
   $diff.addEventListener('change', newPuzzle);
 }
@@ -58,6 +60,16 @@ function newPuzzle() {
     }
   });
 }
+
+// ---------- Neustart ----------
+function restartPuzzle() {
+  if (!current) return;
+  userValues = current.clues.slice();
+  selectedIdx = -1;
+  renderBoard();
+  setStatus('', `Puzzle bereit (${current.clueCount} Hinweise, ${current.constraints.length} Hinweis-Pfeile).`);
+}
+
 
 // ---------- Rendering ----------
 function renderBoard() {
@@ -198,6 +210,7 @@ function setCellValue(idx, v) {
       : (cellEl.insertBefore(document.createTextNode(v === 0 ? '' : String(v)), cellEl.firstChild || null));
     cellEl.classList.remove('ok', 'err');
   }
+  clearHints();
   checkAutoSolved();
 }
 
@@ -217,9 +230,10 @@ function checkAutoSolved() {
   if (!current) return;
   const givens = new Set(current.givens);
   const grid = userValues.slice();
+  const c = countSolutions(grid, givens, current.constraints, current.N, 2);
   let allFilled = true;
   for (let i = 0; i < grid.length; i++) if (grid[i] === 0) { allFilled = false; break; }
-  if (allFilled && isValidComplete(grid, givens, current.constraints, current.N)) {
+  if (allFilled && c === 1) {
     for (let i = 0; i < grid.length; i++) {
       const el = $board.querySelector(`.cell[data-idx="${i}"]`);
       if (el) el.classList.add('ok');
@@ -227,46 +241,6 @@ function checkAutoSolved() {
     setStatus('Gelöst! \uD83C\uDF89', 'ok');
     stopTimer();
   }
-}
-
-// Prüft ein vollständig gefülltes Grid gegen alle Futoshiki-Regeln:
-//  - jeder Wert liegt im Bereich 1..N
-//  - jede Zeile enthält jede Zahl 1..N genau einmal
-//  - jede Spalte enthält jede Zahl 1..N genau einmal
-//  - alle Ungleichheits-Constraints (grid[a] < grid[b] bzw. grid[a] > grid[b])
-// Gibt true zurück, wenn das Grid alle Regeln erfüllt.
-function isValidComplete(grid, givens, constraints, N) {
-  // 1) Wertebereich
-  for (let i = 0; i < grid.length; i++) {
-    const v = grid[i];
-    if (!Number.isInteger(v) || v < 1 || v > N) return false;
-  }
-  // 2) Zeilen-Eindeutigkeit (jede Zahl 1..N genau einmal)
-  for (let r = 0; r < N; r++) {
-    const seen = new Set();
-    for (let c = 0; c < N; c++) {
-      const v = grid[r * N + c];
-      if (seen.has(v)) return false;
-      seen.add(v);
-    }
-  }
-  // 3) Spalten-Eindeutigkeit (jede Zahl 1..N genau einmal)
-  for (let c = 0; c < N; c++) {
-    const seen = new Set();
-    for (let r = 0; r < N; r++) {
-      const v = grid[r * N + c];
-      if (seen.has(v)) return false;
-      seen.add(v);
-    }
-  }
-  // 4) Ungleichheits-Constraints
-  for (const cn of constraints) {
-    const va = grid[cn.a];
-    const vb = grid[cn.b];
-    if (cn.op === '<' && !(va < vb)) return false;
-    if (cn.op === '>' && !(va > vb)) return false;
-  }
-  return true;
 }
 
 function markObviousErrors() {

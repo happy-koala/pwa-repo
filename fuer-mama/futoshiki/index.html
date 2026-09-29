@@ -6,19 +6,12 @@
   <meta name="theme-color" content="#6b2a16" />
   <title>Futoshiki</title>
   <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <header class="app-header">
-    <a href="../" class="home-link" aria-label="Zurück zur Auswahl">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="#ffffff33" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-label="Home">
-        <path d="M3 10.5 12 3l9 7.5"/>
-        <path d="M5 9.5V21h14V9.5"/>
-        <path d="M9 21v-6h6v6"/>
-      </svg>
-    </a>
     <h1 class="app-title">Futoshiki</h1>
     <div class="controls">
       <label class="control">
@@ -37,9 +30,10 @@
           <option value="hard">Schwer</option>
         </select>
       </label>
-      <button id="new-btn" type="button" class="btn-primary">Neues Puzzle</button>
     </div>
     <div class="status-bar">
+      <button id="btn-restart" type="button" class="btn-secondary">Neustart</button>
+      <button id="new-btn" type="button" class="btn-primary">Neues Puzzle</button>
       <span id="status" class="status">Drücke „Neues Puzzle", um zu starten.</span>
       <span id="timer" class="timer" hidden>00:00</span>
     </div>
@@ -56,6 +50,7 @@
   </footer>
 
   <script type="module" src="./app.js"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5","spa":2}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5","spa":2}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"8607d2a720d14b038279025b2b5a82e5","spa":2}' crossorigin="anonymous"></script>
 </body>
