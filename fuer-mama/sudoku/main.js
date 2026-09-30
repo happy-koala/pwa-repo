@@ -42,7 +42,6 @@
   const loadingEl   = document.getElementById('loading');
   const backBtn     = document.getElementById('back-btn');
   const restartBtn  = document.getElementById('btn-restart');
-  const homeLink    = document.getElementById('home-link');
   const startScreen = document.getElementById('start-screen');
   const gameScreen  = document.getElementById('game-screen');
 
@@ -67,8 +66,7 @@
   function showScreen(name) {
     startScreen.classList.toggle('active', name === 'start');
     gameScreen.classList.toggle('active', name === 'game');
-    homeLink.hidden = (name !== 'start');
-    backBtn.hidden = (name !== 'game');
+    backBtn.hidden = (name !== 'start');
     restartBtn.hidden = (name !== 'game');
   }
   // ----------------------------------------------------------------
@@ -401,7 +399,22 @@
   }
 
   function restartPuzzle() {
-    if (state.difficulty) startGame(state.difficulty);
+    if (!state.user || !state.initial) return;
+
+    // Keep the original puzzle/givens and clear only player entries.
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (!state.initial[r][c]) state.user[r][c] = 0;
+      }
+    }
+
+    state.selected = null;
+    state.solved = false;
+    buildBoard();
+    renderBoard();
+    showScreen('game');
+    // Reset the timer as before, without generating a new puzzle.
+    startTimer();
   }
 
   function backToStart() {
@@ -418,7 +431,6 @@
   // Wire up events
   // ----------------------------------------------------------------
   function init() {
-    showScreen('start');
     buildKeypad();
     buildBoard();
 

@@ -7,7 +7,7 @@
 // any old caches from previous versions.
 // -----------------------------------------------------------------------------
 
-const CACHE_NAME = 'sudoku-pwa-v3.01';
+const CACHE_NAME = 'sudoku-pwa-v3.0.2';
 const ASSETS = [
   './',
   './index.html',
