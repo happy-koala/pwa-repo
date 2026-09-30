@@ -15,11 +15,6 @@ const apps = [
   //   icon: "icon-192.png"
   },
    {
-     name: "Futoshiki (WIP)",
-     folder: "futoshiki",
-     icon: "icons/icon-192.png"
-  },
-   {
      name: "Undercover (WIP)",
      folder: "undercover-pwa",
      icon: "icons/icon-192.png"
