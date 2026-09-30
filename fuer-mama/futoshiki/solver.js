@@ -35,7 +35,7 @@ function solveRec(g, givens, constraints, N, limit) {
 
   if (bestIdx === -1) {
     // No empty cell -> all filled -> one solution
-    return 1;
+    return isCompleteValid(g, constraints, N) ? 1 : 0;
   }
 
   let count = 0;
@@ -47,6 +47,35 @@ function solveRec(g, givens, constraints, N, limit) {
     if (count >= limit) return count;
   }
   return count;
+}
+
+function isCompleteValid(g, constraints, N) {
+  for (let i = 0; i < g.length; i++) {
+    if (!Number.isInteger(g[i]) || g[i] < 1 || g[i] > N) return false;
+  }
+  for (let r = 0; r < N; r++) {
+    const seen = new Set();
+    for (let c = 0; c < N; c++) {
+      const v = g[r * N + c];
+      if (seen.has(v)) return false;
+      seen.add(v);
+    }
+  }
+  for (let c = 0; c < N; c++) {
+    const seen = new Set();
+    for (let r = 0; r < N; r++) {
+      const v = g[r * N + c];
+      if (seen.has(v)) return false;
+      seen.add(v);
+    }
+  }
+  for (const constraint of constraints) {
+    const a = g[constraint.a];
+    const b = g[constraint.b];
+    if (constraint.op === '<' && !(a < b)) return false;
+    if (constraint.op === '>' && !(a > b)) return false;
+  }
+  return true;
 }
 
 // Compute the domain (allowed values) of cell `idx` given current grid `g`.
@@ -122,8 +151,8 @@ function search(g, givens, constraints, N, onSolution) {
     }
   }
   if (bestIdx === -1) {
-    onSolution();
-    return true;
+    if (isCompleteValid(g, constraints, N)) onSolution();
+    return isCompleteValid(g, constraints, N);
   }
   for (const v of bestDomain) {
     g[bestIdx] = v;
