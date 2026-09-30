@@ -41,6 +41,8 @@
   const diffLabel   = document.getElementById('difficulty-display');
   const loadingEl   = document.getElementById('loading');
   const backBtn     = document.getElementById('back-btn');
+  const restartBtn  = document.getElementById('btn-restart');
+  const homeLink    = document.getElementById('home-link');
   const startScreen = document.getElementById('start-screen');
   const gameScreen  = document.getElementById('game-screen');
 
@@ -65,9 +67,10 @@
   function showScreen(name) {
     startScreen.classList.toggle('active', name === 'start');
     gameScreen.classList.toggle('active', name === 'game');
-    backBtn.hidden = (name === 'start');
+    homeLink.hidden = (name !== 'start');
+    backBtn.hidden = (name !== 'game');
+    restartBtn.hidden = (name !== 'game');
   }
-
   // ----------------------------------------------------------------
   // Grid + Keypad rendering
   // ----------------------------------------------------------------
@@ -397,6 +400,10 @@
     });
   }
 
+  function restartPuzzle() {
+    if (state.difficulty) startGame(state.difficulty);
+  }
+
   function backToStart() {
     stopTimer();
     state.selected = null;
@@ -411,6 +418,7 @@
   // Wire up events
   // ----------------------------------------------------------------
   function init() {
+    showScreen('start');
     buildKeypad();
     buildBoard();
 
@@ -420,6 +428,7 @@
       );
     });
     backBtn.addEventListener('click', backToStart);
+    restartBtn.addEventListener('click', restartPuzzle);
 
     // Keyboard support: digits 1-9 set a value, 0/Backspace/Delete
     // erases, arrow keys to move selection.
