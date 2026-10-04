@@ -449,7 +449,7 @@ function renderAllCollection() {
   header.className = 'collection-panel__header';
 
   const title = document.createElement('h2');
-  title.textContent = 'Alle erfassten Kennzeichen';
+  title.textContent = 'Alle Kennzeichen';
   header.append(title);
 
   const sortButton = document.createElement('button');
