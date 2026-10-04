@@ -401,10 +401,45 @@ main {
   animation: fade-in 180ms ease both;
 }
 
+.collection-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.collection-panel__header h2 {
+  margin: 0;
+}
+
+.collection-sort-button {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  min-height: 2.0rem;
+  padding: .35rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: .3rem;
+  background: transparent;
+  color: var(--text);
+  white-space: nowrap;
+  font-size: 0.8em;
+}
+
+.collection-sort-button--all, .collection-sort-button--region {
+  width: 6.5rem;
+}
+
+.collection-sort-button:hover,
+.collection-sort-button:focus-visible {
+  border-color: var(--yellow);
+  color: var(--yellow-bright);
+}
+
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: .85rem;
+  margin-top: .9rem;
 }
 
 .region-progress {
@@ -424,6 +459,11 @@ main {
 .region-progress span {
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.region-progress .muted {
+  position: relative;
+  top: -.2rem;
 }
 
 .region-progress.is-complete {

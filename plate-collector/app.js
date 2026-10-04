@@ -27,6 +27,10 @@ const REGION_NAMES = {
 
 const collection = new Map(); // code -> collectedAt (YYYY-MM-DD HH:mm:ss)
 
+const collectionSortModes = ['A→Z', 'Z→A', 'Neu → Alt', 'Alt → Neu'];
+let collectionSortMode = 0;
+let regionDisplayMode = 0;
+
 const elements = {
   collectionView: document.querySelector('#view-sammlung'),
   captureView: document.querySelector('#view-erfassen'),
@@ -368,9 +372,24 @@ function renderCollectionOverview() {
 
   panel.replaceChildren();
 
+  const header = document.createElement('div');
+  header.className = 'collection-panel__header';
+
   const title = document.createElement('h2');
   title.textContent = 'Nach Bundesland';
-  panel.append(title);
+  header.append(title);
+
+  const displayButton = document.createElement('button');
+  displayButton.type = 'button';
+  displayButton.className = 'collection-sort-button collection-sort-button--region';
+  displayButton.textContent = regionDisplayMode === 0 ? 'Absolut' : 'Relativ';
+  displayButton.setAttribute('aria-label', `Anzeige: ${displayButton.textContent}`);
+  displayButton.addEventListener('click', () => {
+    regionDisplayMode = regionDisplayMode === 0 ? 1 : 0;
+    renderCollectionOverview();
+  });
+  header.append(displayButton);
+  panel.append(header);
 
   const list = document.createElement('div');
   list.className = 'collection-grid';
@@ -389,7 +408,9 @@ function renderCollectionOverview() {
 
       item.querySelector('strong').textContent = regionName(key);
       item.querySelector('.tysk').textContent = "DB" + key;
-      item.querySelector('.muted').textContent = `${group.collected} / ${group.total}`;
+      item.querySelector('.muted').textContent = regionDisplayMode === 0
+        ? `${group.collected} / ${group.total}`
+        : `${Math.round((group.collected / group.total) * 100)} %`;
 
       list.append(item);
     });
@@ -424,15 +445,38 @@ function renderAllCollection() {
     return;
   }
 
+  const header = document.createElement('div');
+  header.className = 'collection-panel__header';
+
   const title = document.createElement('h2');
   title.textContent = 'Alle erfassten Kennzeichen';
-  panel.append(title);
+  header.append(title);
+
+  const sortButton = document.createElement('button');
+  sortButton.type = 'button';
+  sortButton.className = 'collection-sort-button collection-sort-button--all';
+  sortButton.textContent = collectionSortModes[collectionSortMode];
+  sortButton.setAttribute('aria-label', `Sortierung: ${sortButton.textContent}`);
+  sortButton.addEventListener('click', () => {
+    collectionSortMode = (collectionSortMode + 1) % collectionSortModes.length;
+    renderAllCollection();
+  });
+  header.append(sortButton);
+  panel.append(header);
 
   const list = document.createElement('div');
   list.className = 'plate-results collected-list';
 
   PLATE_CODES
     .filter((plate) => collection.has(plate.code))
+    .sort((a, b) => {
+      if (collectionSortMode === 0) return a.code.localeCompare(b.code, 'de');
+      if (collectionSortMode === 1) return b.code.localeCompare(a.code, 'de');
+      const aDate = collection.get(a.code) || '';
+      const bDate = collection.get(b.code) || '';
+      const dateOrder = bDate.localeCompare(aDate);
+      return collectionSortMode === 2 ? dateOrder : -dateOrder;
+    })
     .forEach((plate) => {
       const item = document.createElement('button');
       item.type = 'button';
