@@ -1,12 +1,12 @@
-const CACHE_NAME = 'kennzeichen-sammler-v0.4.2';
+const CACHE_NAME = 'kennzeichen-sammler-v0.4.3';
 const APP_SHELL = [
   './index.html',
-  './css/style.css',
-  './js/app.js',
-  './js/plates-data.js',
+  './style.css',
+  './app.js',
+  './plates-data.js',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {

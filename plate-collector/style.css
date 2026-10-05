@@ -140,7 +140,7 @@ h2 {
   gap: .8rem;
   width: min(100%, var(--content-width));
   margin: 0 auto;
-  padding: max(.85rem, env(safe-area-inset-top)) 1rem .85rem;
+  padding: max(.25rem, env(safe-area-inset-top)) 1rem 0.25rem;
 }
 
 .brand {
@@ -295,8 +295,10 @@ main {
   top: 50%;
   right: .35rem;
   transform: translateY(-50%);
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 2.1rem;
+  min-width: 2.1rem; /* new */
+  height: 2.1rem;
+  min-height: 2.1rem; /* new */
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -305,7 +307,7 @@ main {
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
-  font-size: 1.15rem;
+  font-size: 1.75rem;
   line-height: 1;
   cursor: pointer;
   transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
@@ -328,7 +330,7 @@ main {
 }
 
 .input-clear-button:active {
-  transform: translateY(1px);
+  transform: translateY(calc(-50% + 1px));
 }
 
 .field-help {
@@ -439,7 +441,10 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: .85rem;
+  max-height: 42vh;
   margin-top: .9rem;
+  padding: 2px;
+  overflow: auto;
 }
 
 .region-progress {
