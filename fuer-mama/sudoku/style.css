@@ -216,7 +216,7 @@ body {
 .board-wrap {
   background: var(--board-bg);
   border-radius: 0.75rem;
-  padding: 0.6rem;
+  padding: 0.15rem;
   box-shadow: 0 4px 14px rgba(0,0,0,0.12);
   border: 2px solid var(--board-line-thick);
   width: 100%;
@@ -225,13 +225,14 @@ body {
 }
 
 .board {
+  border-radius: 0.75rem;
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   aspect-ratio: 1 / 1;
   width: 100%;
-  border: 2px solid var(--board-line-thick);
+  border: 0px solid var(--board-line-thick);
   background: var(--board-bg);
-  gap: 1px; /* thin separators drawn by background */
+  gap: 2px; /* thin separators drawn by background */
 }
 
 .cell {
