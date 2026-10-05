@@ -19,6 +19,7 @@ let userValues = [];       // vom Nutzer eingegebene Zahlen (0 = leer)
 let selectedIdx = -1;      // Index der ausgewählten Zelle
 let timerHandle = null;
 let startTs = 0;
+let solved = false;
 
 // ---------- Initial ----------
 window.addEventListener('DOMContentLoaded', () => {
@@ -42,6 +43,8 @@ function bindEvents() {
 // ---------- Puzzle laden ----------
 function newPuzzle() {
   stopTimer();
+  solved = false;
+  hideSolvedOverlay();
   const N = parseInt($size.value, 10);
   const diff = $diff.value;
   setStatus('Generiere Puzzle …', '');
@@ -64,6 +67,8 @@ function newPuzzle() {
 // ---------- Neustart ----------
 function restartPuzzle() {
   if (!current) return;
+  solved = false;
+  hideSolvedOverlay();
   userValues = current.clues.slice();
   selectedIdx = -1;
   renderBoard();
@@ -233,14 +238,137 @@ function checkAutoSolved() {
   const c = countSolutions(grid, givens, current.constraints, current.N, 2);
   let allFilled = true;
   for (let i = 0; i < grid.length; i++) if (grid[i] === 0) { allFilled = false; break; }
-  if (allFilled && c === 1) {
+  if (!solved && allFilled && c === 1) {
+    solved = true;
     for (let i = 0; i < grid.length; i++) {
       const el = $board.querySelector(`.cell[data-idx="${i}"]`);
       if (el) el.classList.add('ok');
     }
     setStatus('Gelöst! \uD83C\uDF89', 'ok');
-    stopTimer();
+    showSolvedOverlay();
   }
+}
+
+function showSolvedOverlay() {
+  stopTimer();
+
+  let overlay = document.getElementById('futoshiki-win-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'futoshiki-win-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'futoshiki-win-title');
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      background: 'rgba(0, 0, 0, 0.35)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: '1000',
+    });
+
+    const dialog = document.createElement('div');
+    Object.assign(dialog.style, {
+      background: 'var(--paper, #f7efe2)',
+      color: 'var(--ink, #2a1a10)',
+      border: '2px solid var(--accent-strong, #4a1c0d)',
+      borderRadius: '0.75rem',
+      padding: '1.5rem 1.75rem',
+      maxWidth: '360px',
+      width: '90%',
+      textAlign: 'center',
+      boxShadow: '0 8px 28px rgba(0,0,0,0.30)',
+    });
+
+    const title = document.createElement('h2');
+    title.id = 'futoshiki-win-title';
+    title.textContent = 'Gelöst!';
+    Object.assign(title.style, {
+      margin: '0 0 0.5rem 0',
+      fontSize: '1.4rem',
+      color: 'var(--accent-strong, #4a1c0d)',
+    });
+
+    const message = document.createElement('p');
+    message.textContent = 'Herzlichen Glückwunsch – das Futoshiki ist vollständig und korrekt gelöst.';
+    Object.assign(message.style, {
+      margin: '0 0 1rem 0',
+      color: 'var(--accent, #6b2a16)',
+    });
+
+    const time = document.createElement('p');
+    time.id = 'futoshiki-win-time';
+    time.textContent = 'Zeit: ' + ($timer.textContent || '00:00');
+    Object.assign(time.style, {
+      margin: '0 0 1.25rem 0',
+      fontVariantNumeric: 'tabular-nums',
+      fontWeight: '600',
+      color: 'var(--accent-strong, #4a1c0d)',
+    });
+
+    const actions = document.createElement('div');
+    Object.assign(actions.style, {
+      display: 'flex',
+      gap: '0.6rem',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+    });
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.textContent = 'Schließen';
+    Object.assign(closeButton.style, {
+      background: 'var(--paper, #f7efe2)',
+      color: 'var(--accent-strong, #4a1c0d)',
+      border: '1px solid var(--accent, #6b2a16)',
+      borderRadius: '0.5rem',
+      padding: '0.6rem 1.2rem',
+      fontSize: '1rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+    });
+
+    const newGameButton = document.createElement('button');
+    newGameButton.type = 'button';
+    newGameButton.textContent = 'Neues Puzzle';
+    Object.assign(newGameButton.style, {
+      background: 'var(--accent, #6b2a16)',
+      color: 'var(--paper, #f7efe2)',
+      border: 'none',
+      borderRadius: '0.5rem',
+      padding: '0.6rem 1.2rem',
+      fontSize: '1rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+    });
+
+    const dismiss = () => { overlay.style.display = 'none'; };
+    closeButton.addEventListener('click', dismiss);
+    newGameButton.addEventListener('click', newPuzzle);
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) dismiss();
+    });
+
+    actions.appendChild(closeButton);
+    actions.appendChild(newGameButton);
+    dialog.appendChild(title);
+    dialog.appendChild(message);
+    dialog.appendChild(time);
+    dialog.appendChild(actions);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+  } else {
+    const time = document.getElementById('futoshiki-win-time');
+    if (time) time.textContent = 'Zeit: ' + ($timer.textContent || '00:00');
+    overlay.style.display = 'flex';
+  }
+}
+
+function hideSolvedOverlay() {
+  const overlay = document.getElementById('futoshiki-win-overlay');
+  if (overlay) overlay.style.display = 'none';
 }
 
 function markObviousErrors() {
